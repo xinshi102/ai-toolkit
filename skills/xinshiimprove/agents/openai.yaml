@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xinshi Improve"
+  short_description: "跨 harness 协作、阶段任务管理、知识沉淀与工具适配"
+  default_prompt: "使用 $xinshiimprove 按当前项目规则规划、执行并验收这项工作。"

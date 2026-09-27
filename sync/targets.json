@@ -1,0 +1,24 @@
+{
+  "component": "xinshiimprove",
+  "canonical": "skills/xinshiimprove",
+  "targets": [
+    {
+      "name": "Codex",
+      "kind": "full-copy",
+      "path": "/Users/xinshi/.codex/skills/xinshiimprove"
+    },
+    {
+      "name": "DeepSeek Harness",
+      "kind": "shared-rules",
+      "path": "/Users/xinshi/.dsh/skills/xinshiimprove",
+      "preserve": ["SKILL.md"]
+    },
+    {
+      "name": "OpenCode",
+      "kind": "shared-rules",
+      "path": "/Users/xinshi/.config/opencode/skills/xinshiimprove",
+      "preserve": ["SKILL.md"]
+    }
+  ],
+  "habits": []
+}

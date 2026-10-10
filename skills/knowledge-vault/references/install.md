@@ -27,3 +27,6 @@ GitHub 工具仓库发布的是技能、模板和辅助脚本。知识库笔记�
 
 Obsidian 下载：https://obsidian.md/download
 已有 Markdown 文件夹作为库打开：https://help.obsidian.md/Files+and+folders/Manage+vaults
+
+## 日常使用（1.0.1）
+直接说「帮我看看这个问题怎么解决」或「看知识库内有没有类似问题」即可，不需要输入技能名。明确查库时先查库；司内问题通常优先参考内部经验；SVN 等通用工具按正常方式排查，知识库作为可选补充。更新后在对应客户端新对话或刷新目录中核实生效。

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 - knowledge-vault 1.0.1
+
+- Accept natural requests without requiring the user to name a skill.
+- Internal issues usually consult the vault first; generic tool faults follow normal diagnosis with optional vault references.
+- Explicit vault searches take priority; mixed internal/tool cases are handled by layer.
+
+
 ## 2026-10-10 — knowledge-vault 1.0.0
 
 - Added a portable work-problem knowledge skill, evidence-aware case template, vault locator and protected installer.

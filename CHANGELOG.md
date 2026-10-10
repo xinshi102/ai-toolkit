@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-10 — sync tooling: multi-component manifest
+
+- `sync/targets.json` now groups entries by component (`xinshiimprove`, `knowledge-vault`) instead of describing a single skill.
+- Added `scripts/sync-skills.sh` (`--check`/`--apply`, optional `--component NAME`); `scripts/sync-xinshiimprove.sh` is now a wrapper for the `xinshiimprove` component.
+- Registered the `knowledge-vault` 1.0.1 installs for the Codex, DeepSeek Harness, OpenCode, and Hermes skill roots.
+
 ## 2026-10-10 - knowledge-vault 1.0.1
 
 - Accept natural requests without requiring the user to name a skill.

@@ -12,9 +12,9 @@ Each component lives in its own directory and keeps its own version and document
 
 ## Updating installed copies
 
-The current machine's known `xinshiimprove` installations and any AI habit files are listed in [`sync/targets.json`](sync/targets.json). Run `scripts/sync-xinshiimprove.sh --check` to compare them with this repository. Run `scripts/sync-xinshiimprove.sh --apply` to back up and update the registered targets. The apply command is local-only: commit and push this repository separately when you want to publish a release.
+The current machine's known installations for every skill component and any AI habit files are listed in [`sync/targets.json`](sync/targets.json). Run `scripts/sync-skills.sh --check` to compare them with this repository, then `scripts/sync-skills.sh --apply` to back up and update the registered targets. `--component NAME` limits a run to one component; `scripts/sync-xinshiimprove.sh` remains as the wrapper for `xinshiimprove`. The apply command is local-only: commit and push this repository separately when you want to publish a release.
 
-When a new release changes shared rules, update the canonical skill under `skills/xinshiimprove/`, then update each tool-specific entry point and habit listed in `sync/targets.json`. Preserve tool-specific wording and behavior. Review the check output before applying, and include the version and affected targets in the release notes.
+When a new release changes shared rules, update the canonical skill under `skills/<component>/`, then update each tool-specific entry point and habit listed in `sync/targets.json`. Preserve tool-specific wording and behavior. Review the check output before applying, and include the version and affected targets in the release notes.
 
 ## Personal repository and forks
 

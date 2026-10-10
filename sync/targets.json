@@ -1,24 +1,55 @@
 {
-  "component": "xinshiimprove",
-  "canonical": "skills/xinshiimprove",
-  "targets": [
+  "components": [
     {
-      "name": "Codex",
-      "kind": "full-copy",
-      "path": "/Users/xinshi/.codex/skills/xinshiimprove"
+      "component": "xinshiimprove",
+      "canonical": "skills/xinshiimprove",
+      "targets": [
+        {
+          "name": "Codex",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.codex/skills/xinshiimprove"
+        },
+        {
+          "name": "DeepSeek Harness",
+          "kind": "shared-rules",
+          "path": "/Users/xinshi/.dsh/skills/xinshiimprove",
+          "preserve": ["SKILL.md"]
+        },
+        {
+          "name": "OpenCode",
+          "kind": "shared-rules",
+          "path": "/Users/xinshi/.config/opencode/skills/xinshiimprove",
+          "preserve": ["SKILL.md"]
+        }
+      ],
+      "habits": []
     },
     {
-      "name": "DeepSeek Harness",
-      "kind": "shared-rules",
-      "path": "/Users/xinshi/.dsh/skills/xinshiimprove",
-      "preserve": ["SKILL.md"]
-    },
-    {
-      "name": "OpenCode",
-      "kind": "shared-rules",
-      "path": "/Users/xinshi/.config/opencode/skills/xinshiimprove",
-      "preserve": ["SKILL.md"]
+      "component": "knowledge-vault",
+      "canonical": "skills/knowledge-vault",
+      "targets": [
+        {
+          "name": "Codex",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.codex/skills/knowledge-vault"
+        },
+        {
+          "name": "DeepSeek Harness",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.dsh/skills/knowledge-vault"
+        },
+        {
+          "name": "OpenCode",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.config/opencode/skills/knowledge-vault"
+        },
+        {
+          "name": "Hermes",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.hermes/skills/note-taking/knowledge-vault"
+        }
+      ],
+      "habits": []
     }
-  ],
-  "habits": []
+  ]
 }

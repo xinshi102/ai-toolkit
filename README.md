@@ -5,7 +5,7 @@ A collection of reusable AI extensions maintained by Xinshi, including Codex and
 ## Contents
 
 - [`skills/knowledge-vault`](skills/knowledge-vault/SKILL.md): collect, classify, and retrieve work problems in an existing Obsidian vault or a temporary Markdown vault. Version **1.0.1**. Natural requests choose vault-first lookup for internal issues and normal diagnosis for generic tool faults. Cross-AI/device setup: [installation guide](skills/knowledge-vault/references/install.md).
-- [`skills/xinshiimprove`](skills/xinshiimprove): cross-harness collaboration workflows and project guidance. Current version: **1.12**.
+- [`skills/xinshiimprove`](skills/xinshiimprove): cross-harness collaboration workflows and project guidance. Current version: **1.13**.
 - [`plan-map`](plan-map): a persistent visual plan tree shown to the user. Two harness builds of the same plan semantics: [`plan-map/dsh`](plan-map/dsh) is the DeepSeek Harness plugin (`plan_import`, `plan_node`, right-sidebar tab), and [`plan-map/codex`](plan-map/codex) is the Codex skill plus its MCP server (`plan_list`, `plan_import`, `plan_node`, `plan_view`, web panel).
 
 Each component lives in its own directory and keeps its own version and documentation. See the component's README or `SKILL.md` for installation and usage.

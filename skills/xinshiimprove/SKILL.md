@@ -1,6 +1,6 @@
 ---
 name: xinshiimprove
-description: "Apply Xinshi’s v1.12 cross-harness collaboration system for task planning, project onboarding, tool adaptation, experience capture, and rule maintenance."
+description: "Apply Xinshi’s v1.13 cross-harness collaboration system for task planning, project onboarding, tool adaptation, experience capture, and rule maintenance."
 ---
 
 # Xinshi Improve
@@ -15,4 +15,4 @@ Use the DSH `plan-map` / `thinking-chain` concepts only where available; in Code
 
 When personal knowledge is relevant, consult the configured Obsidian wiki entry point and follow that vault’s schema. Do not copy private source notes into task cards, bridge messages, or another harness unless the user explicitly asks and the destination is appropriate.
 
-The v1.12 closeout requires a concise self-assessment and a separate human-facing acceptance report. At task end, ask the four rule-observation questions in one sentence; only record an observation if the user recognizes one. Do not independently change shared rules, delete skills, or promote an experiment as effective.
+The v1.13 closeout requires a concise self-assessment and a separate human-facing acceptance report. At task end — or when genuinely warranted — ask the four rule-observation questions in one sentence, at most once per topic (an unanswered question is dropped, never chased); only record an observation if the user recognizes one. Do not independently change shared rules, delete skills, or promote an experiment as effective.

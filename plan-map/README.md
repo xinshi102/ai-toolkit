@@ -21,7 +21,7 @@
 - 安装（本机 profile 手工装法）：`pnpm add file:<本目录>` 装依赖，再在 profile 的
   `cordis.patch.yml` 里加一行 insert 启用。**不要**写进 `dsh.profile.bundles`：
   官方新版内置的 `dsh-plugin-manager` 会重算 bundles，把非它启用的条目清掉。
-- 验证：`node --test`（28 项：大纲解析 / 导入 / 自动打标 / 增删改查 / 折叠 / 布局 / 接线）。
+- 验证：`node --test`（本机实测 56 项全绿：大纲解析 / 导入 / 自动打标 / 增删改查 / 折叠 / 布局 / 卡片 / 接线）。
 
 ## codex/ —— Codex 技能 + MCP 服务器
 

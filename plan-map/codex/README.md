@@ -1,5 +1,11 @@
 # Codex Plan Map
 
+## Windows 安装与验收
+
+使用本机 Node.js 22+，在本目录执行 `npm ci --ignore-scripts --registry=https://registry.npmjs.org` 和 `npm test`。锁文件使用官方 npm 源，已去除原快照中不可下载的依赖版本。用本机绝对路径执行 `codex mcp add plan-map -- <node.exe> <本目录/server.js>`，安装 `skills/plan-map` 完整目录到 Codex 技能目录。保留已有配置；新对话/重连后检查工具发现。
+
+界面验收需 Python、Playwright 和 Chrome；设置 `NODE_BINARY` 为本机 `node.exe` 后执行 `python acceptance/ui.py`。验收脚本支持 Windows 管道，使用独立临时计划目录，不读取用户浏览器资料。协议/存储/布局六项测试和真实 Chrome 交互已在 Windows 通过；Codex 宿主内嵌 MCP App 显示仍需重连后确认。
+
 本机计划导图适配器：持久保存计划，显示当前步骤、完成/阻塞状态与进度，支持节点详情、折叠、缩放、修改状态及改父子分支。用户可直接编辑，AI 通过 MCP 工具更新；以保存的版本号防止相互覆盖。
 
 ## 当前安装

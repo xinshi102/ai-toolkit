@@ -1,6 +1,6 @@
 ---
 name: daily-office-work
-description: Handle routine office tasks in DSH: reports, briefing webpages, spreadsheets, and data extraction with source tracking and a clear review pass.
+description: "Handle routine office tasks in Codex or DSH: reports, briefing webpages, spreadsheets, and data extraction with source tracking and a clear review pass."
 ---
 
 # Daily Office Work

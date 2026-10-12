@@ -1,13 +1,13 @@
 ---
 name: ai-workspace-manager
-description: 管理个人 Mac 的 AI Workspace，按 Registry 定位资产、增量盘点、检查重复、生成迁移方案、验证与审计；不访问公司域或凭据。
+description: 管理本机已配置的 AI Workspace（Windows、macOS、Linux），按 Registry 定位资产、增量盘点、检查重复、生成迁移方案、验证与审计；不访问公司域或凭据。
 ---
 
 # AI Workspace Manager
 
-权威资产状态：/Users/xinshi/AI-Workspace/08-System/inventory/registry.json。
-执行工具：/Users/xinshi/AI-Workspace/04-Tools/scripts/manager.py（系统 Python，无网络、无常驻服务）。
-先读 /Users/xinshi/AI-Workspace/00-HOME/README.md 和 Dashboard。按索引定位后按需读取；不要扫描全用户目录或读取凭据、会话数据库和公司知识库。
+先从用户指定目录、`AI_WORKSPACE_ROOT` 或 `~/.config/ai-workspace-manager/config.json` 的 `workspace_root` 定位本机工作区；未配置时说明缺失，不套用另一台设备的路径。
+权威资产状态为工作区下 `08-System/inventory/registry.json`；工具为 `04-Tools/scripts/manager.py`（Python，无网络、无常驻服务）。
+先读工作区下 `00-HOME/README.md` 和 Dashboard。按索引定位后按需读取；不要扫描全用户目录或读取凭据、会话数据库和公司知识库。Windows 部署和验证见 [Windows 说明](references/windows.md)。
 
 ## 自然语言与动作
 - 发现新资产 → discover（只读 JSON）；更新索引 → index（只更新管理状态，并保存前版）。

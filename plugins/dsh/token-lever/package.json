@@ -1,0 +1,23 @@
+{
+  "name": "@local/dsh-token-lever",
+  "version": "0.1.1",
+  "private": true,
+  "description": "DSH 省 token 插件：请求面重复结果折叠 + 陈旧结果中段裁剪（保头尾、可恢复），不损失性能",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

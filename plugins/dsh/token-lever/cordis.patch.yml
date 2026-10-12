@@ -1,0 +1,15 @@
+# token-lever bundle patch：主机行 + 默认配置。
+- insert:
+    - id: token-lever
+      name: '@local/dsh-token-lever'
+      config:
+        # 最近 N 条工具结果永不触碰（模型正在用）
+        keepRecent: 4
+        # 超过该字符数的陈旧结果才做中段裁剪
+        thresholdChars: 4096
+        headChars: 1536
+        tailChars: 512
+        # 相同内容只保留最新一条，旧条折叠成一行标记
+        dedupe: true
+        # 单步最多重写几条（限制 pre-step 耗时）
+        maxOpsPerStep: 16

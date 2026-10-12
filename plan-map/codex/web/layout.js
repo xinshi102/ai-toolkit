@@ -28,9 +28,9 @@ export const NOTE_W = 14;
 export const BADGE_W = 30;
 
 export const COMPACT = {
-  nodeHeight: 28,
-  gapX: 26,
-  gapY: 7,
+  nodeHeight: 24,
+  gapX: 22,
+  gapY: 6,
   padX: 10,
   font: 11,
 };
@@ -80,7 +80,7 @@ export function nodeWidthOf(node, options = {}) {
   const text = measureTitle(node?.title, font);
   const extra = DOT_W + padX * 2 + (node?.note ? NOTE_W : 0) + (node?.collapsedChildren ? BADGE_W : 0);
   const min = compact ? 76 : 88;
-  const max = compact ? 220 : 280;
+  const max = compact ? 180 : 280;
   return Math.max(min, Math.min(max, text + extra));
 }
 

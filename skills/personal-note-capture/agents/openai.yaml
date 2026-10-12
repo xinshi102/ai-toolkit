@@ -1,0 +1,4 @@
+interface:
+  display_name: "Personal Note Capture"
+  short_description: "Archive excerpts and personal memories"
+  default_prompt: "Archive this excerpt or memory in my Obsidian vault"

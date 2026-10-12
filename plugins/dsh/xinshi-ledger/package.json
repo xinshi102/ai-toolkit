@@ -1,0 +1,24 @@
+{
+  "name": "@local/dsh-xinshi-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "xinshiimprove 规则观察台账：ledger_observe 追加观察（只追加）、同步频次索引与闸 0 门槛",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./ledger": "./lib/ledger.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

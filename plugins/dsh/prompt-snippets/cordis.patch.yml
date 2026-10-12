@@ -1,0 +1,10 @@
+# prompt-snippets bundle patch：主机行 + 默认配置。
+- insert:
+    - id: prompt-snippets
+      name: '@local/dsh-prompt-snippets'
+      config:
+        # snippet 库存放目录（JSON 文件 snippets.json）
+        root: '~/.dsh/snippets'
+        # 上限保护
+        maxSnippets: 100
+        maxBodyChars: 4000

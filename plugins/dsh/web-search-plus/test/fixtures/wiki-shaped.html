@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Layout engine - Wikipedia</title>
+  <script>document.documentElement.className = "client-js";</script>
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Layout_engine roottext-layout">
+  <div id="mw-page-base" class="noprint"></div>
+  <div id="mw-navigation">
+    <div id="mw-head">
+      <nav id="p-personal" class="vector-menu" aria-label="Personal tools">
+        <ul>
+          <li><a href="/wiki/Not_used">Not logged in</a></li>
+          <li><a href="/wiki/Special:Talk">Talk</a></li>
+          <li><a href="/wiki/Special:Contributions">Contributions</a></li>
+          <li><a href="/wiki/Special:CreateAccount">Create account</a></li>
+          <li><a href="/wiki/Special:UserLogin">Log in</a></li>
+        </ul>
+      </nav>
+      <div id="left-navigation">
+        <nav id="p-namespaces" class="vector-menu" aria-label="Namespaces">
+          <ul>
+            <li><a href="/wiki/Layout_engine">Article</a></li>
+            <li><a href="/wiki/Talk:Layout_engine">Talk</a></li>
+          </ul>
+        </nav>
+        <nav id="p-views" class="vector-menu" aria-label="Views">
+          <ul>
+            <li><a href="/w/index.php?title=Layout_engine&amp;action=edit">Edit</a></li>
+            <li><a href="/w/index.php?title=Layout_engine&amp;action=history">View history</a></li>
+            <li><a href="/wiki/Special:WhatLinksHere/Layout_engine">What links here</a></li>
+            <li><a href="/wiki/Special:RecentChangesLinked/Layout_engine">Related changes</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div id="mw-panel">
+      <nav id="p-navigation" class="portal" aria-label="Navigation">
+        <h3>Navigation</h3>
+        <ul>
+          <li><a href="/wiki/Main_Page">Main page</a></li>
+          <li><a href="/wiki/Wikipedia:Contents">Contents</a></li>
+          <li><a href="/wiki/Portal:Current_events">Current events</a></li>
+          <li><a href="/wiki/Wikipedia:Random">Random article</a></li>
+        </ul>
+      </nav>
+      <nav id="p-tb" class="portal" aria-label="Tools">
+        <h3>Tools</h3>
+        <ul>
+          <li><a href="/wiki/Special:WhatLinksHere/Layout_engine">What links here</a></li>
+          <li><a href="/wiki/Special:RecentChangesLinked/Layout_engine">Related changes</a></li>
+          <li><a href="/wiki/Special:Upload">Upload file</a></li>
+          <li><a href="/wiki/Special:SpecialPages">Special pages</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <main id="content" class="mw-body">
+    <h1 id="firstHeading">Layout engine</h1>
+    <div id="siteSub">From Wikipedia, the free encyclopedia</div>
+    <div id="mw-content-text" class="mw-body-content">
+      <div class="mw-content-ltr mw-parser-output">
+        <table class="infobox">
+          <tbody>
+            <tr><th colspan="2">Layout engine</th></tr>
+            <tr><th>Purpose</th><td><a href="/wiki/Web_browser">Web browser</a> rendering</td></tr>
+            <tr><th>Examples</th><td><a href="/wiki/Blink_(browser_engine)">Blink</a>, <a href="/wiki/Gecko_(software)">Gecko</a>, <a href="/wiki/WebKit">WebKit</a></td></tr>
+            <tr><th>Related</th><td><a href="/wiki/HTML">HTML</a>, <a href="/wiki/CSS">CSS</a>, <a href="/wiki/Document_Object_Model">DOM</a></td></tr>
+          </tbody>
+        </table>
+
+        <p>A <b>layout engine</b> is the software component of a <a href="/wiki/Web_browser">web browser</a>
+        that turns a document tree plus a set of style rules into boxes with positions on a screen.
+        It sits between the <a href="/wiki/HTML_parser">parser</a> and the
+        <a href="/wiki/Compositor">compositor</a>.<sup class="reference"><a href="#cite_note-1">[1]</a></sup></p>
+
+        <p>The two inputs are the <a href="/wiki/Document_Object_Model">DOM</a> and the
+        <a href="/wiki/CSS">CSS</a> cascade. The engine walks the tree, computes styles, lays out
+        each box with the constraints of its parent, and paints the result.<sup class="reference"><a href="#cite_note-2">[2]</a></sup></p>
+
+        <div class="mw-heading mw-heading2"><h2 id="History">History</h2></div>
+        <p>Early engines laid out tables only. Incremental layout arrived when engines learned to
+        mark only the affected subtree as dirty instead of reflowing the whole document.</p>
+
+        <div class="mw-heading mw-heading3"><h3 id="Incremental_layout">Incremental layout</h3></div>
+        <p>An incremental engine keeps a dirty bit per element. When a node changes size, its
+        ancestors are re-laid out, but siblings that cannot move are reused as-is.</p>
+
+        <div class="mw-heading mw-heading2"><h2 id="See_also">See also</h2></div>
+        <ul>
+          <li><a href="/wiki/Browser_engine">Browser engine</a></li>
+          <li><a href="/wiki/Comparison_of_browser_engines">Comparison of browser engines</a></li>
+          <li><a href="/wiki/Reflow">Reflow</a></li>
+          <li><a href="/wiki/Style_sheet_(web_development)">Style sheet</a></li>
+          <li><a href="/wiki/Document_Object_Model">Document Object Model</a></li>
+          <li><a href="/wiki/Web_browser_engine">Web browser engine</a></li>
+        </ul>
+
+        <div class="mw-heading mw-heading2"><h2 id="References">References</h2></div>
+        <ol class="references">
+          <li id="cite_note-1"><span class="reference-text"><a href="/wiki/Special:BookSources/9780262034618">Cormen, Thomas H. (2009). <i>Introduction to Algorithms</i>. MIT Press. p.&nbsp;219.</a></span></li>
+          <li id="cite_note-2"><span class="reference-text"><a href="/wiki/Special:BookSources/9780321608073">Keith, Jeremy (2010). <i>HTML5 for Web Designers</i>. A Book Apart. p.&nbsp;41.</a></span></li>
+          <li id="cite_note-3"><span class="reference-text"><a href="/wiki/Special:BookSources/9781449398583">Zakas, Nicholas (2011). <i>High Performance JavaScript</i>. O'Reilly. p.&nbsp;88.</a></span></li>
+          <li id="cite_note-4"><span class="reference-text"><a href="/wiki/Special:BookSources/9781491910405">Osmani, Addy (2015). <i>Learning JavaScript Design Patterns</i>. O'Reilly.</a></span></li>
+          <li id="cite_note-5"><span class="reference-text"><a href="/wiki/Special:BookSources/9780596517748">Crockford, Douglas (2008). <i>JavaScript: The Good Parts</i>. O'Reilly.</a></span></li>
+          <li id="cite_note-6"><span class="reference-text"><a href="/wiki/Special:BookSources/9780132350884">Martin, Robert C. (2008). <i>Clean Code</i>. Prentice Hall.</a></span></li>
+          <li id="cite_note-7"><span class="reference-text"><a href="/wiki/Special:BookSources/9780201633610">Gamma, Erich (1994). <i>Design Patterns</i>. Addison-Wesley.</a></span></li>
+          <li id="cite_note-8"><span class="reference-text"><a href="/wiki/Special:BookSources/9781430224990">Freeman, Adam (2010). <i>Pro ASP.NET MVC</i>. Apress.</a></span></li>
+        </ol>
+
+        <div class="mw-heading mw-heading2"><h2 id="External_links">External links</h2></div>
+        <ul>
+          <li><a rel="nofollow" class="external text" href="https://www.w3.org/TR/CSS22/visudet.html">Visual formatting model (W3C)</a></li>
+          <li><a rel="nofollow" class="external text" href="https://html.spec.whatwg.org/multipage/rendering.html">Rendering section (WHATWG)</a></li>
+          <li><a rel="nofollow" class="external text" href="https://developer.mozilla.org/en-US/docs/Web/Performance/How_browsers_work">How browsers work (MDN)</a></li>
+          <li><a rel="nofollow" class="external text" href="https://web.dev/articles/rendering-performance">Rendering performance (web.dev)</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="printfooter">Retrieved from "https://en.wikipedia.org/w/index.php?title=Layout_engine"</div>
+  </main>
+
+  <footer id="footer" class="mw-footer">
+    <ul id="footer-info">
+      <li id="footer-info-lastmod">This page was last edited on 3 September 2026, at 11:04 (UTC).</li>
+      <li id="footer-info-copyright">Text is available under the Creative Commons Attribution-ShareAlike License.</li>
+    </ul>
+    <ul id="footer-places">
+      <li><a href="/wiki/Wikipedia:Privacy_policy">Privacy policy</a></li>
+      <li><a href="/wiki/Wikipedia:About">About Wikipedia</a></li>
+      <li><a href="/wiki/Wikipedia:General_disclaimer">Disclaimers</a></li>
+      <li><a href="/wiki/Wikipedia:Contact_us">Contact</a></li>
+      <li><a href="/wiki/Special:MobileView">Mobile view</a></li>
+    </ul>
+  </footer>
+</body>
+</html>

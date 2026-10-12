@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-10-12",
+  "components": [
+    {
+      "name": "dsh-search-mcp",
+      "kind": "plugin",
+      "path": "plugins/dsh/dsh-search-mcp",
+      "origin": "adapted upstream (MIT)",
+      "status": "source snapshot"
+    },
+    {
+      "name": "gpt-consult",
+      "kind": "plugin",
+      "path": "plugins/dsh/gpt-consult",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "prompt-snippets",
+      "kind": "plugin",
+      "path": "plugins/dsh/prompt-snippets",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "session-guard",
+      "kind": "plugin",
+      "path": "plugins/dsh/session-guard",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "sidebar-plugin-management",
+      "kind": "plugin",
+      "path": "plugins/dsh/sidebar-plugin-management",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "task-notifications",
+      "kind": "plugin",
+      "path": "plugins/dsh/task-notifications",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "thinking-chain",
+      "kind": "plugin",
+      "path": "plugins/dsh/thinking-chain",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "token-lever",
+      "kind": "plugin",
+      "path": "plugins/dsh/token-lever",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "web-search-plus",
+      "kind": "plugin",
+      "path": "plugins/dsh/web-search-plus",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "xinshi-ledger",
+      "kind": "plugin",
+      "path": "plugins/dsh/xinshi-ledger",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "plan-map-dsh",
+      "kind": "plugin",
+      "path": "plan-map/dsh",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "plan-map-codex",
+      "kind": "plugin+mcp+skill",
+      "path": "plan-map/codex",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "master-plan",
+      "kind": "plugin draft",
+      "path": "experimental/dsh-master-plan",
+      "origin": "personal",
+      "status": "incomplete; not installable"
+    },
+    {
+      "name": "codex-bridge",
+      "kind": "plugin",
+      "path": "plugins/dsh/codex-bridge",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "ui-enhancements",
+      "kind": "plugin collection",
+      "path": "plugins/dsh/ui-enhancements",
+      "origin": "personal",
+      "status": "legacy builder; explicit deployment only"
+    },
+    {
+      "name": "novel-writing",
+      "kind": "skill",
+      "path": "skills/novel-writing",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "obsidian-knowledge-base",
+      "kind": "skill",
+      "path": "skills/obsidian-knowledge-base",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "personal-note-capture",
+      "kind": "skill",
+      "path": "skills/personal-note-capture",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "supervise-hermes",
+      "kind": "skill",
+      "path": "skills/supervise-hermes",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "generate-images-with-comfyui",
+      "kind": "skill",
+      "path": "skills/generate-images-with-comfyui",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "visual-director",
+      "kind": "skill",
+      "path": "skills/visual-director",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "hatch-pet",
+      "kind": "skill",
+      "path": "skills/hatch-pet",
+      "origin": "personal adaptation; Apache-2.0 license retained",
+      "status": "source snapshot"
+    },
+    {
+      "name": "daily-office-work",
+      "kind": "skill",
+      "path": "skills/daily-office-work",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "xinshiimprove",
+      "kind": "skill",
+      "path": "skills/xinshiimprove",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "knowledge-vault",
+      "kind": "skill",
+      "path": "skills/knowledge-vault",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "ai-workspace-manager",
+      "kind": "skill",
+      "path": "skills/ai-workspace-manager",
+      "origin": "personal",
+      "status": "source snapshot"
+    },
+    {
+      "name": "workspace-manager-tools",
+      "kind": "tools",
+      "path": "tools/workspace-manager",
+      "origin": "personal",
+      "status": "source; target setup required"
+    },
+    {
+      "name": "opencode-bridge",
+      "kind": "mcp",
+      "path": "mcp/opencode-bridge",
+      "origin": "personal",
+      "status": "protocol source; requires live local bridge"
+    }
+  ],
+  "excluded": "Credentials, runtime state, private conversations/vaults, official unmodified skills, installed vendor plugins, binaries and screenshots"
+}

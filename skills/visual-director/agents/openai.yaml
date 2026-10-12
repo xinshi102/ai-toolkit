@@ -1,0 +1,4 @@
+interface:
+  display_name: "视觉导演"
+  short_description: "将感觉翻译为专业视觉简报、受控生图与可复现验收流程"
+  default_prompt: "使用 $visual-director，把我描述的感觉整理成中文视觉简报、候选图和有依据的迭代方案。"

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Streaming Token Budgets — Engineering Notes</title>
+  <meta property="og:title" content="Streaming Token Budgets">
+  <meta name="description" content="How we keep context affordable.">
+  <script>window.__BOOT__ = {"ads": true};</script>
+  <style>.ad { display: none }</style>
+</head>
+<body class="post-template">
+  <div class="cookie-consent">
+    <p>We use cookies to improve your experience. By clicking "Accept all" you agree to our cookie policy.</p>
+    <button>Accept all</button>
+  </div>
+
+  <header class="site-header">
+    <a class="logo" href="/">Engineering Notes</a>
+    <nav class="main-nav">
+      <a href="/home">Home</a>
+      <a href="/blog">Blog</a>
+      <a href="/guides">Guides</a>
+      <a href="/changelog">Changelog</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/login">Log in</a>
+      <a href="/signup">Sign up</a>
+    </nav>
+  </header>
+
+  <div class="ad-banner" id="advert-top">
+    <a href="https://ads.example.com/promo">Buy the ultimate observability suite — 40% off today!</a>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Popular posts</h3>
+      <ul>
+        <li><a href="/p/1">Why your agent burns tokens</a></li>
+        <li><a href="/p/2">Caching strategies for LLM tools</a></li>
+        <li><a href="/p/3">A field guide to context compaction</a></li>
+        <li><a href="/p/4">Reading the session log</a></li>
+        <li><a href="/p/5">Structured output without tears</a></li>
+        <li><a href="/p/6">Subagents, pipelines, and you</a></li>
+        <li><a href="/p/7">Debugging a plugin loader</a></li>
+        <li><a href="/p/8">The cost of a system prompt</a></li>
+      </ul>
+      <div class="newsletter">
+        <p>Subscribe to our newsletter for weekly notes.</p>
+      </div>
+    </aside>
+
+    <main>
+      <article class="post-content">
+        <header class="entry-header">
+          <h1>Streaming Token Budgets</h1>
+          <p class="byline">By Dana Whitfield · March 14, 2026 · 9 min read</p>
+        </header>
+
+        <p>Every tool call that returns a web page spends context. When an agent reads three
+        documentation pages in a row, the raw HTML for each one can easily consume more tokens
+        than the question that started the investigation. The fix is not to read less; it is to
+        read the same page with less noise.</p>
+
+        <p>This note describes the budget model we settled on after watching a week of traces.
+        The model has three parts: a main-content extractor, a hard token budget per read, and a
+        local cache keyed by normalized URL.</p>
+
+        <h2>Why extraction beats truncation</h2>
+
+        <p>Truncation is the cheapest possible policy: read the first <code>N</code> characters and
+        stop. It fails in a specific, expensive way — the first ten thousand characters of a real
+        page are usually navigation, cookie banners, and a table of contents, so the model pays for
+        chrome and still misses the answer in section six.</p>
+
+        <p>Extraction inverts that. We score candidate containers by text length, subtract link
+        text, and nudge the score by class and id names. Readers whose content lives inside
+        <code>&lt;article&gt;</code> or <code>&lt;main&gt;</code> skip the scoring entirely. What
+        survives is the prose, the code, the lists, and the tables.</p>
+
+        <h2>A budget you can continue</h2>
+
+        <p>A budget that silently drops the tail is worse than no budget, because the model cannot
+        tell whether it saw everything. So a truncated read ends with an explicit marker that names
+        the token count of the whole document and the offset to resume from:</p>
+
+        <pre><code class="language-json">{
+  "truncated": true,
+  "nextOffset": 4820,
+  "content": "...[truncated: full text 12040 chars]"
+}</code></pre>
+
+        <p>The rules we follow when cutting:</p>
+
+        <ul>
+          <li>Cut on a paragraph boundary when one is available in the last 40% of the window.</li>
+          <li>Never cut inside a fenced code block; close the fence if the cut lands mid-block.</li>
+          <li>Always report both the delivered size and the size of the whole document.</li>
+        </ul>
+
+        <h2>Cache the result, not the bytes</h2>
+
+        <p>The cache stores the extracted markdown rather than the raw response. Extraction is
+        deterministic, so caching its output is safe, and a hit then saves network, parsing, and
+        rendering in one step. Keys include an extractor version so that improving the extractor
+        invalidates old entries instead of quietly serving yesterday's algorithm.</p>
+
+        <table>
+          <thead>
+            <tr><th>Policy</th><th>Tokens per read</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Raw HTML</td><td>31,400</td><td>Baseline, unusable</td></tr>
+            <tr><td>Full-text markdown</td><td>8,100</td><td>Keeps all chrome</td></tr>
+            <tr><td>Extracted + budget</td><td>1,350</td><td>This note</td></tr>
+          </tbody>
+        </table>
+
+        <blockquote>
+          <p>A budget without a continuation marker is a lie with good manners.</p>
+        </blockquote>
+
+        <h2>What we deliberately skip</h2>
+
+        <p>Comments, related-post rails, breadcrumbs, pagination, share buttons, and newsletter
+        prompts are dropped unconditionally when their class or id names them. Article headers are
+        kept when they carry real text, because the byline and the date are frequently the reason
+        the page was fetched at all.</p>
+
+        <p>None of this changes the underlying fetch. The provider still owns DNS policy, timeouts,
+        redirect limits, and decoding; the plugin only decides what the model is allowed to pay for.</p>
+      </article>
+    </main>
+  </div>
+
+  <section class="related-articles">
+    <h3>Related reading</h3>
+    <ul>
+      <li><a href="/p/9">Cheap context: a checklist</a></li>
+      <li><a href="/p/10">When to fork a subagent</a></li>
+      <li><a href="/p/11">Measuring savings honestly</a></li>
+    </ul>
+  </section>
+
+  <section id="comments" class="comments">
+    <h3>24 comments</h3>
+    <div class="comment"><p>Great write-up, but what about PDFs?</p></div>
+    <div class="comment"><p>We did something similar and saved 60%.</p></div>
+    <div class="comment"><p>Does this work for SPA shells?</p></div>
+  </section>
+
+  <footer class="site-footer">
+    <nav>
+      <a href="/terms">Terms of service</a>
+      <a href="/privacy">Privacy policy</a>
+      <a href="/cookies">Cookie policy</a>
+      <a href="/rss">RSS</a>
+    </nav>
+    <p>© 2026 Engineering Notes. All rights reserved.</p>
+  </footer>
+</body>
+</html>

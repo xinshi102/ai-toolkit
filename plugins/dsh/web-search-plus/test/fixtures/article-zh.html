@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>计划树插件是怎么排版的 · 工程笔记</title>
+  <meta name="description" content="布局与连线的一些取舍。">
+  <script>var _hmt = []; _hmt.push(['_trackEvent', 'read']);</script>
+</head>
+<body>
+  <div class="header">
+    <div class="nav-bar">
+      <a href="/">首页</a>
+      <a href="/archives">归档</a>
+      <a href="/tags">标签</a>
+      <a href="/about">关于</a>
+      <a href="/rss">订阅</a>
+    </div>
+  </div>
+
+  <div class="ad-banner">
+    <a href="https://ads.example.cn/x">限时优惠：云服务器 1 折起，点击领取</a>
+  </div>
+
+  <div class="container">
+    <div class="sidebar">
+      <h3>热门文章</h3>
+      <ul>
+        <li><a href="/a/1">上下文压缩的三个层次</a></li>
+        <li><a href="/a/2">怎么给工具结果定价</a></li>
+        <li><a href="/a/3">会话日志为什么不能写自定义事件</a></li>
+        <li><a href="/a/4">投影缓存的读法</a></li>
+        <li><a href="/a/5">插件加载器排错笔记</a></li>
+      </ul>
+      <p>关注公众号，第一时间收到更新。</p>
+    </div>
+
+    <div id="content" class="article-content">
+      <h1>计划树插件是怎么排版的</h1>
+      <p class="meta">作者：xinshi · 2026-09-24 · 阅读 3 分钟</p>
+
+      <p>计划树最难的不是画节点，而是让「节点变宽、树变深、面板变窄」这三件事同时成立。
+      一开始用固定宽度和固定行高，中文标题一长就冲出卡片；后来改成按像素测宽，卡片宽度跟着标题走，
+      但整棵树就变得很宽，在只有六百多像素的侧边栏里根本放不下。</p>
+
+      <p>现在的做法是两步：先按真实文本宽度排版，量出整棵树的画布尺寸；如果连可读下限的缩放都放不下，
+      就自动折叠成两列总览。用户不需要点任何按钮，也不会看到一张糊成一片的缩略图。</p>
+
+      <h2>连线为什么用折线</h2>
+
+      <p>曲线看着柔和，但在密集的树里，两条曲线交叉时很难判断谁连谁。折线加圆角既保留了父子关系的方向感，
+      又不会在交叉处糊成一团。同行的父子直接画一条横线，跨行的走「横—竖—横」。</p>
+
+      <pre><code class="language-js">function linkPath(parent, child, direction) {
+  const sameRow = parent.y === child.y;
+  return sameRow ? horizontal(parent, child) : elbow(parent, child);
+}</code></pre>
+
+      <p>几个具体的数值取舍：</p>
+
+      <ul>
+        <li>节点高 34px，两侧留白 14px，状态字形占 18px。</li>
+        <li>同列间距 12px：再小就看不出是两个节点，再大就浪费纵向空间。</li>
+        <li>多根之间留三倍间距，让不同的子树在视觉上分开。</li>
+      </ul>
+
+      <h2>手工位置与重叠</h2>
+
+      <p>节点可以自由拖动，位置按会话存在本地。问题出在重排之后：手工位置是「拖到哪儿就停在哪儿」，
+      而自动布局的基准位置会因为折叠、新增节点而整体移动，于是两个节点就叠在了一起。</p>
+
+      <p>修法是载入后做一次自检：算出所有卡片的矩形，两两相交就把参与冲突的手工位置复位回自动布局，
+      其余人的位置不动。这样既不会误伤用户摆好的布局，也不会让树上出现看不清的叠影。</p>
+
+      <table>
+        <thead>
+          <tr><th>场景</th><th>处理</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>放不下</td><td>自动折叠成两列</td></tr>
+          <tr><td>标题过长</td><td>按像素截断加省略号</td></tr>
+          <tr><td>手工位置互压</td><td>只复位冲突的那些</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="related">
+    <h3>相关阅读</h3>
+    <ul>
+      <li><a href="/a/6">思考链插件是怎么记事的</a></li>
+      <li><a href="/a/7">token 计量为什么要和宿主同源</a></li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p>版权所有 © 2026 工程笔记 · 转载请注明出处</p>
+    <p><a href="/sitemap">站点地图</a> · <a href="/feed">RSS 订阅</a></p>
+  </div>
+</body>
+</html>

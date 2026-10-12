@@ -1,0 +1,29 @@
+{
+  "name": "@local/dsh-sidebar-plugin-management",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "统一插件管理位置：侧边栏管理，隐藏设置中的重复市场入口。",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "market",
+        "slots"
+      ],
+      "immediately": true
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

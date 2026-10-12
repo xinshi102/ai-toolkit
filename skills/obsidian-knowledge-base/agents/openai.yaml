@@ -1,0 +1,4 @@
+interface:
+  display_name: "Obsidian Knowledge Base"
+  short_description: "维护 Obsidian 知识库与 LLM Wiki"
+  default_prompt: "整理、查询或维护我的 Obsidian 知识库"

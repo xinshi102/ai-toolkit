@@ -5,3 +5,11 @@ Thumbs.db
 !.env.example
 *.log
 .sync-backups/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+reports/
+*.sqlite
+*.sqlite3
+*.db

@@ -1,3 +1,10 @@
+## 2026-10-12 — Personal Skill / plugin / MCP collection
+
+- Publish the reviewed personal DSH plugin ecosystem and collaboration bridge, with tests and upstream notices.
+- Publish Codex/ChatGPT-local skills and Plan Map 0.3.2 MCP/App source, including compact embedded viewport changes.
+- Preserve experimental Master Plan separately; add the capability catalog, MCP bridge and Workspace controller source.
+- Exclude credentials, private runtime state, chats, screenshots and installed vendor binaries.
+
 # Changelog
 
 ## 2026-10-10 — sync tooling: multi-component manifest

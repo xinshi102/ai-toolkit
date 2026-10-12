@@ -1,3 +1,10 @@
+## 2026-10-13 — Plan Map 0.5.0 interaction parity
+
+- Add free positioning/reset, drag reparenting, canvas pan, inline rename and ancestor-path highlighting.
+- Match rounded orthogonal connectors, status glyphs, root/card/note/CSS states; retain readable fit and collapse badges.
+- v7 UI, legacy v3-v6 compatible; 18/18 isolated tests and real 425px/360px page checks.
+- User-host MCP reconnection remains separate and unverified; local view offsets do not change plan storage.
+
 ## 2026-10-13 — Plan Map 0.4.0 readable fit
 
 - Width-only fit at 0.7–1, SVG viewBox scaling, 0.7–2 manual zoom, deep-branch automatic collapse and scrolling within 280px.

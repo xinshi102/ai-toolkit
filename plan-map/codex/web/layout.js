@@ -276,6 +276,17 @@ export function layoutTree(nodes, options = {}) {
  * 竖向（上根下枝）的圆角折线：父下中 → 短竖 → 横 → 短竖 → 子上中。
  * @returns SVG path d
  */
+function roundedOrthogonal(points,radius){
+ let d=`M ${points[0][0]} ${points[0][1]}`;
+ for(let i=1;i<points.length-1;i++){
+  const [a,b,c]=[points[i-1],points[i],points[i+1]],incoming=Math.hypot(b[0]-a[0],b[1]-a[1]),outgoing=Math.hypot(c[0]-b[0],c[1]-b[1]);
+  const r=Math.min(radius,incoming/2,outgoing/2);if(!r){d+=` L ${b[0]} ${b[1]}`;continue;}
+  const before=[b[0]-(b[0]-a[0])*r/incoming,b[1]-(b[1]-a[1])*r/incoming],after=[b[0]+(c[0]-b[0])*r/outgoing,b[1]+(c[1]-b[1])*r/outgoing];
+  d+=` L ${before[0]} ${before[1]} Q ${b[0]} ${b[1]} ${after[0]} ${after[1]}`;
+ }
+ const last=points.at(-1);return d+` L ${last[0]} ${last[1]}`;
+}
+
 export function elbowPathVertical(parent, child, options = {}) {
   const radius = options.radius ?? 9;
   const x1 = parent.x + parent.w / 2;
@@ -287,7 +298,7 @@ export function elbowPathVertical(parent, child, options = {}) {
   const gap = y2 - y1;
   if (gap <= radius * 2 + 2) {
     const ddy = Math.max(8, gap * 0.5);
-    return `M ${x1} ${y1} C ${x1} ${y1 + ddy}, ${x2} ${y2 - ddy}, ${x2} ${y2}`;
+    return roundedOrthogonal([[x1,y1],[x1,y1+ddy],[x2,y1+ddy],[x2,y2]],radius);
   }
   const mid = y1 + Math.min(gap / 2, Math.max(radius + 4, 16));
   const r = Math.min(radius, Math.abs(dx) / 2, Math.abs(y1 - mid), Math.abs(y2 - mid));
@@ -346,7 +357,7 @@ export function elbowPath(parent, child, options = {}) {
   if (gap <= radius * 2 + 2) {
     // 列间距太窄：退化为直接贝塞尔，避免拐角互相吃掉
     const dx = Math.max(8, gap * 0.5);
-    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    return roundedOrthogonal([[x1,y1],[x1+dx,y1],[x1+dx,y2],[x2,y2]],radius);
   }
   const mid = x1 + Math.min(gap / 2, Math.max(radius + 4, 18));
   const r = Math.min(radius, Math.abs(dy) / 2, Math.abs(x1 - mid), Math.abs(x2 - mid));

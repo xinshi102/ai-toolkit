@@ -1,3 +1,10 @@
+## 2026-10-13 — Plan Map 0.4.0 readable fit
+
+- Width-only fit at 0.7–1, SVG viewBox scaling, 0.7–2 manual zoom, deep-branch automatic collapse and scrolling within 280px.
+- v6 MCP App resource with v3/v4/v5 compatibility.
+- Restore embedded direction/manual folding preferences and preserve scrolling on status-only updates.
+- 11 isolated acceptance tests pass; original 425px/360px screenshots reviewed.
+
 ## 2026-10-12 — Personal Skill / plugin / MCP collection
 
 - Publish the reviewed personal DSH plugin ecosystem and collaboration bridge, with tests and upstream notices.

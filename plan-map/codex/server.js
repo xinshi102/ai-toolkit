@@ -7,10 +7,12 @@ import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { Store } from './store.js';
 const store=new Store(process.env.PLAN_MAP_HOME);
-const uri='ui://xinshi-plan-map/v5.html';
+const uri='ui://xinshi-plan-map/v6.html';
 const base=fileURLToPath(new URL('./web/',import.meta.url));
 const html=await readFile(base+'index.html','utf8');const client=await readFile(base+'app.js','utf8');const layout=await readFile(base+'layout.js','utf8');const viewport=await readFile(base+'viewport.js','utf8');
-const widget=html.replace('<script type="module" src="/app.js"></script>',`<script type="module">${client.replace("import { layoutTree, truncateToWidth } from './layout.js';",layout.replaceAll('export ','')).replace("import { graphViewport } from './viewport.js';",viewport.replaceAll('export ',''))}</script>`);
+const inline=client.replace(/^import \{[\s\S]*?\} from '\.\/layout\.js';$/m,layout.replaceAll('export ','')).replace(/^import \{[\s\S]*?\} from '\.\/viewport\.js';$/m,viewport.replaceAll('export '));
+if(/^\s*import\s/m.test(inline))throw Error('inline widget still contains an import statement');
+const widget=html.replace('<script type="module" src="/app.js"></script>',`<script type="module">${inline}</script>`);
 let url;
 const token=randomBytes(24).toString('hex');
 async function call(name,args){if(name==='plan_list'||name==='plan_dashboard')return {plans:await store.list(),viewerUrl:url+'/'};if(name==='plan_import')return store.import(args);if(name==='plan_node')return store.node(args);if(name==='plan_view')return {...await store.get(args.planId),viewerUrl:url+'/?plan='+encodeURIComponent(args.planId)};throw Error('Unknown tool');}
@@ -26,10 +28,10 @@ const web=http.createServer(async(req,res)=>{try{
  res.writeHead(404);res.end();
  }catch(e){res.writeHead(400,{'Content-Type':'application/json'});res.end(JSON.stringify({error:e.message}));}});
 await new Promise(resolve=>web.listen(Number(process.env.PLAN_MAP_PORT||0),'127.0.0.1',resolve));url='http://127.0.0.1:'+web.address().port;
-const server=new Server({name:'xinshi-plan-map',version:'0.3.2'},{capabilities:{tools:{},resources:{}}});
+const server=new Server({name:'xinshi-plan-map',version:'0.4.0'},{capabilities:{tools:{},resources:{}}});
 server.setRequestHandler(ListToolsRequestSchema,async()=>({tools}));
 server.setRequestHandler(CallToolRequestSchema,async({params})=>{try{const value=await call(params.name,params.arguments||{});return {structuredContent:value,content:[{type:'text',text:JSON.stringify(value)}]};}catch(e){return {isError:true,content:[{type:'text',text:e.message}]};}});
 server.setRequestHandler(ListResourcesRequestSchema,async()=>({resources:[{uri,name:'Plan Map',mimeType:'text/html;profile=mcp-app'}]}));
-server.setRequestHandler(ReadResourceRequestSchema,async({params})=>{if(params.uri!==uri&&!['ui://xinshi-plan-map/v3.html','ui://xinshi-plan-map/v4.html'].includes(params.uri))throw Error('Unknown resource');return {contents:[{uri:params.uri,mimeType:'text/html;profile=mcp-app',text:widget,_meta:{ui:{prefersBorder:true}}}]};});
+server.setRequestHandler(ReadResourceRequestSchema,async({params})=>{if(params.uri!==uri&&!['ui://xinshi-plan-map/v3.html','ui://xinshi-plan-map/v4.html','ui://xinshi-plan-map/v5.html'].includes(params.uri))throw Error('Unknown resource');return {contents:[{uri:params.uri,mimeType:'text/html;profile=mcp-app',text:widget,_meta:{ui:{prefersBorder:true}}}]};});
 if(process.argv.includes('--web'))console.log(url);else await server.connect(new StdioServerTransport());
 process.stdin.on('end',()=>{if(!process.argv.includes('--web')){web.close();process.exit(0);}});

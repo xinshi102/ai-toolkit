@@ -7,7 +7,7 @@ description: "Automatically create, restore and display inline persistent visual
 
 Assess applicability in every conversation and reassess when a simple request becomes substantial. Use this workflow when the task normally has three or more meaningful steps, multiple deliverables or dependent stages, or continues an existing substantial task across turns or conversations. Skip standalone factual answers, translations and trivial one-step edits unless the user asks for a map. Chinese requests need no Plan keyword or Plan mode.
 
-Use the plan-map MCP server's `plan_list`, `plan_import`, `plan_view`, and `plan_node` tools when available. The source is `/Users/xinshi/Documents/deepseek/work/dshworkspace/adapters/codex-plan-map/`.
+Use the plan-map MCP server's `plan_list`, `plan_import`, `plan_view`, and `plan_node` tools when available. Resolve the source from the registered plan-map MCP command on this machine; never use another computer’s absolute path.
 
 At the start of a qualifying task, use `plan_list` and inspect candidate plans with `plan_view`. The list omits conversation metadata, so inspect the full plan before deciding it matches. Match the task and known conversation ID; an explicit continuation can reuse another conversation's plan when its contents match. A shared project or the newest saved plan alone is insufficient. For an unrelated task, create a fresh planId using the conversation ID when known and a task suffix; otherwise use a unique task ID. Do not attach yesterday's completed plan to unrelated work.
 

@@ -1,17 +1,19 @@
 """Isolated local-app acceptance; never uses the user's saved plans or browser profile."""
-import os, pathlib, tempfile, subprocess, selectors, json
+import os, pathlib, tempfile, subprocess, queue, threading, shutil, json
 from playwright.sync_api import sync_playwright
 root=pathlib.Path(__file__).resolve().parents[1]
-node='/Users/xinshi/.hermes/node/bin/node'
+node=os.environ.get('NODE_BINARY') or shutil.which('node')
+if not node: raise RuntimeError('Set NODE_BINARY or add Node.js to PATH')
 with tempfile.TemporaryDirectory(prefix='plan-map-ui-') as temp:
-    env={'PATH':os.environ['PATH'],'PLAN_MAP_HOME':temp}
+    env={**os.environ,'PLAN_MAP_HOME':temp}
     seed="import {Store}from './store.js';await new Store(process.env.PLAN_MAP_HOME).import("+json.dumps({'planId':'ui','outline':'# 项目\n- 设计\n- 验收'})+");"
     subprocess.run([node,'--input-type=module','-e',seed],cwd=root,env=env,check=True)
-    proc=subprocess.Popen([node,'server.js','--web'],cwd=root,env=env,stdout=subprocess.PIPE,text=True)
+    proc=subprocess.Popen([node,'server.js','--web'],cwd=root,env=env,stdout=subprocess.PIPE,text=True,encoding='utf-8')
     try:
-        selector=selectors.DefaultSelector();selector.register(proc.stdout,selectors.EVENT_READ)
-        assert selector.select(15),'server startup timeout'
-        url=proc.stdout.readline().strip()
+        urls=queue.Queue()
+        threading.Thread(target=lambda: urls.put(proc.stdout.readline().strip()),daemon=True).start()
+        url=urls.get(timeout=15)
+        assert url.startswith('http://127.0.0.1:'),'server startup failed'
         with sync_playwright() as p:
             browser=p.chromium.launch(channel='chrome',headless=True)
             page=browser.new_page(viewport={'width':425,'height':740})
@@ -42,3 +44,4 @@ with tempfile.TemporaryDirectory(prefix='plan-map-ui-') as temp:
         print('PASS: hidden controls/details, menu, collapse/expand, direction persistence, edit/save/reload')
     finally:
         proc.terminate();proc.wait(timeout=10)
+        proc.stdout.close()

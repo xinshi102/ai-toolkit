@@ -5,6 +5,13 @@ H=Path.home()
 NOW=datetime.now(timezone.utc).isoformat()
 SKILL_ROOTS=[H/x for x in ['.codex/skills','.codex/plugins/cache','.hermes/skills','.dsh/skills','.config/opencode/skills','Documents/Game/.codex','AI-Workspace/03-Skills/shared']]
 PROJECT_ROOTS=[H/x for x in ['Documents/Game','Documents/deepseek','Documents/Computer']]
+if os.name=='nt':
+ SKILL_ROOTS=[H/'.codex/skills']
+ PROJECT_ROOTS=[]
+if os.environ.get('AI_SKILL_ROOTS'):
+ SKILL_ROOTS=[Path(p).expanduser() for p in json.loads(os.environ['AI_SKILL_ROOTS'])]
+if os.environ.get('AI_PROJECT_ROOTS'):
+ PROJECT_ROOTS=[Path(p).expanduser() for p in json.loads(os.environ['AI_PROJECT_ROOTS'])]
 EXCLUDED={'node_modules','.git','__pycache__','.venv','venv','cache','sessions','logs','backups','sources','knowledge-vault','knowledge-vault-mcp'}
 def excluded(p):
  return any(t in p.name.lower() for t in ['credential','secret','token','auth','.env','knowledge-vault']) or p.name in EXCLUDED

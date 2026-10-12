@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Personal Mac workspace controller. No network; no daemon."""
-import argparse,json,os,hashlib,uuid,fcntl
+"""Personal workspace controller (Windows and POSIX). No network; no daemon."""
+import argparse,json,os,hashlib,uuid
 from pathlib import Path
+from file_lock import file_lock
 from datetime import datetime,timezone
 import discovery
 W=Path(__file__).resolve().parents[2]
 R=W/'08-System/inventory/registry.json'
 def now():return datetime.now(timezone.utc).isoformat()
-def read(p):return json.loads(p.read_text())
+def read(p):return json.loads(p.read_text(encoding='utf-8'))
 def write(p,d):
  p.parent.mkdir(parents=True,exist_ok=True)
  tmp=p.with_name(p.name+'.tmp-'+uuid.uuid4().hex)
- with tmp.open('x') as f:json.dump(d,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+ with tmp.open('x', encoding='utf-8') as f:json.dump(d,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
  os.replace(tmp,p)
 def audit(action,details):
  p=W/'08-System/audit/operations.jsonl'
- with p.open('a') as f:f.write(json.dumps({'time':now(),'action':action,'details':details},ensure_ascii=False)+'\n');f.flush();os.fsync(f.fileno())
+ with p.open('a', encoding='utf-8') as f:f.write(json.dumps({'time':now(),'action':action,'details':details},ensure_ascii=False)+'\n');f.flush();os.fsync(f.fileno())
 def get(d,aid):
  a=next((x for x in d['assets'] if x['asset_id']==aid),None)
  if not a:raise ValueError('Unknown asset ID')
@@ -38,20 +39,21 @@ def artifact_projection():
  if not p.exists():return []
  return [dict(a,asset_id=a['artifact_id'],type='artifact',current_path=a['path'],source_of_truth=a['path'],harness=a['producer'],management_policy='A',evidence_status='VERIFIED file sealed' if a['status']=='ready' else 'UNVERIFIED reserved output') for a in read(p)['artifacts']]
 def render(d):
- counts={}
- for a in d['assets']:counts[a['type']]=counts.get(a['type'],0)+1
- home=W/'00-HOME'
+ home=W/'00-HOME';home.mkdir(parents=True,exist_ok=True)
  rows=d['assets']+artifact_projection()
- (home/'DIRECTORY.md').write_text('# Workspace Directory Map\n\n资产状态：../08-System/inventory/registry.json；产物状态：../08-System/inventory/artifacts.json。原生资产保留原路径。\n\n| 类型 | 名称 | 当前绝对路径 | 证据 |\n|---|---|---|---|\n'+''.join('| '+a['type']+' | '+a['name'].replace('|','\\|')+' | '+a['current_path'].replace('|','\\|')+' | '+a['evidence_status']+' |\n' for a in rows))
- body='# Mac AI Workspace\n\n个人 Mac，禁止公司域同步。更新时间：'+d['generated_at']+'\n\n资产 '+str(len(d['assets']))+' 项；已登记新产物 '+str(len(artifact_projection()))+' 件。\n\n'
- if (home/'PROJECT-CATEGORIES.md').exists():body+='- [按用途查找：AI Studio / Learn / Computer / Unity / Life](PROJECT-CATEGORIES.md)\n\n'
- body+='- [项目重复、归档与迁移核查](../06-Artifacts/reports/PROJECT-REVIEW.md)\n- [下一步项目整理清单](../08-System/manifests/project-next-work.json)\n- [全部本机 AI 启动与专属工作区](AI-ENTRIES/README.md)\n- [新对话统一入口](NEW-CONVERSATION.md)\n- [AI 入口与能力](../08-System/manifests/harnesses.json)\n- [任务与参与 AI](../08-System/inventory/tasks.json)\n- [产物索引](../08-System/inventory/artifacts.json)\n- [目录与资产定位](DIRECTORY.md)\n- [管理验收](../06-Artifacts/reports/GOVERNANCE-ACCEPTANCE.md)\n- [Manager Skill](../03-Skills/shared/ai-workspace-manager/SKILL.md)\n- [风险](../08-System/policies/RISK-REGISTER.md)\n- [迁移计划](../08-System/migrations/MIGRATION-PLAN.md)\n- [兼容性](../06-Artifacts/reports/COMPATIBILITY.md)\n- [重复资产核查](../06-Artifacts/reports/DUPLICATE-AUDIT.md)\n- [完整验收记录](../06-Artifacts/reports/ACCEPTANCE.json)\n\n'
- p=W/'08-System/manifests/harnesses.json'
- if p.exists():
-  body+='| AI | 管理入口 | 自动发现 Manager |\n|---|---|---|\n'
-  for e in read(p)['harnesses']:body+='| '+e['id']+' | '+e['manager_entry_status']+' | '+str(e['capabilities']['native_manager_autodiscovery'])+' |\n'
- body+='\n总体目标仍在进行中：直接点击原应用图标尚未统一接入。详见 [真实入口状态](../06-Artifacts/reports/AI-ENTRY-STATUS.md) 与 [具体原生变更方案](../08-System/integration-proposals/NATIVE-ENTRY-PROPOSAL.json)。\n\n验收由管理者执行，不要求用户制造测试任务。真实模型对话效果在之后自然使用时观察，不作为管理工具交付门槛。新产物遵循任务分配与封存协议；没有全局写盘拦截。现有项目及原生资源通过原位索引定位。\n\nSkill 分发由兼容记录、准备方案和具体原生安装授权驱动；DSH 准备源、Kimi 本机交接入口不等于已原生自动接入。\n\nPlan Map 是计划唯一权威源：~/.codex/plan-map/mac-ai-workspace-20261011.json。这里只引用，当前显示入口由 plan_view 获取。\n'
- (home/'DASHBOARD.md').write_text(body)
+ def cell(value):return str(value).replace('|','\\|').replace('\n',' ')
+ (home/'DIRECTORY.md').write_text('# Workspace Directory Map\n\n资产原位登记；文件存在不代表宿主加载已验收。\n\n| 类型 | 名称 | 当前绝对路径 | 证据 |\n|---|---|---|---|\n'+''.join('| '+' | '.join(cell(a.get(k,'')) for k in ('type','name','current_path','evidence_status'))+' |\n' for a in rows),encoding='utf-8')
+ body='# AI Workspace\n\n更新时间：'+d['generated_at']+'\n\n资产 '+str(len(d['assets']))+' 项；已登记产物 '+str(len(artifact_projection()))+' 件。\n\n'
+ for label,rel in [('入口','README.md'),('新对话','NEW-CONVERSATION.md'),('资产目录','DIRECTORY.md'),('宿主配置','../08-System/manifests/harnesses.json'),('任务','../08-System/inventory/tasks.json'),('产物','../08-System/inventory/artifacts.json')]:
+  if (home/rel).is_file():body+='- ['+label+']('+rel+')\n'
+ manifest=W/'08-System/manifests/harnesses.json'
+ if manifest.exists():
+  body+='\n| AI | 管理入口 | 原生发现状态 |\n|---|---|---|\n'
+  for entry in read(manifest)['harnesses']:
+   body+='| '+cell(entry['id'])+' | '+cell(entry.get('manager_entry_status','configured local entry'))+' | '+cell(entry.get('capabilities',{}).get('native_manager_autodiscovery','UNVERIFIED'))+' |\n'
+ body+='\n登记、文件部署、宿主发现和实际功能验收分别记录。Plan Map 的计划位置以本机 MCP 配置和 plan_view 为准。迁移仍需具体源、目标与回滚方案的授权。\n'
+ (home/'DASHBOARD.md').write_text(body,encoding='utf-8')
+
 def index(d):
  found=discovery.discover(d);seen={a['asset_id'] for a in found['assets']}
  for a in d['assets']:
@@ -74,7 +76,7 @@ def index(d):
  write(R,found);render(found);audit('index',{'assets':len(found['assets'])});return found
 def reject_symlink_chain(p):
  for part in [p,*p.parents]:
-  if part.is_symlink():raise ValueError('Symlink path component prohibited')
+  if part.is_symlink() or (hasattr(part, 'is_junction') and part.is_junction()):raise ValueError('Symlink path component prohibited')
 def check_file(a,p):
  reject_symlink_chain(p)
  if a['type'] not in ['workflow','prompt','agent']:raise ValueError('Only reviewed individual workflow/prompt/agent files are supported; native plans/configs/skills are retained')
@@ -86,7 +88,7 @@ def destination(p):
  if '..' in p.parts or not p.is_relative_to(W/'09-Inbox/incoming'):raise ValueError('Destination must be in Workspace 09-Inbox/incoming')
  for parent in [p,*p.parents]:
   if parent==W.parent:break
-  if parent.is_symlink():raise ValueError('Symlink destination prohibited')
+  if parent.is_symlink() or (hasattr(parent, 'is_junction') and parent.is_junction()):raise ValueError('Symlink destination prohibited')
  if p.exists():raise ValueError('Destination exists')
  return p
 def migrate(plan_path,approval_path,d):
@@ -126,8 +128,7 @@ def main():
  ap.add_argument('command',choices=['discover','index','locate','organize','plan-migrate','migrate','rollback','validate','audit','report'])
  ap.add_argument('--asset');ap.add_argument('--query',default='');ap.add_argument('--type');ap.add_argument('--project');ap.add_argument('--destination');ap.add_argument('--plan');ap.add_argument('--approval');ap.add_argument('--record')
  args=ap.parse_args()
- with (W/'08-System/audit/controller.lock').open('a') as lock:
-  fcntl.flock(lock,fcntl.LOCK_EX)
+ with file_lock(W/'08-System/audit/controller.lock') as lock:
   d=read(R)
   if args.command=='discover':out=discovery.discover(d)
   elif args.command=='index':out={'assets':len(index(d)['assets'])}
@@ -137,7 +138,7 @@ def main():
   elif args.command=='validate':
    out={'evidence_status':'VERIFIED','issues':validate(d)}
    if out['issues']:print(json.dumps(out,ensure_ascii=False));return 1
-  elif args.command=='audit':out=(W/'08-System/audit/operations.jsonl').read_text() if (W/'08-System/audit/operations.jsonl').exists() else ''
+  elif args.command=='audit':out=(W/'08-System/audit/operations.jsonl').read_text(encoding='utf-8') if (W/'08-System/audit/operations.jsonl').exists() else ''
   elif args.command=='report':render(d);out={'dashboard':str(W/'00-HOME/DASHBOARD.md')}
   elif args.command=='plan-migrate':
    a=get(d,args.asset);p=Path(a['current_path']);check_file(a,p);dest=destination(args.destination)

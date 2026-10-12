@@ -18,6 +18,7 @@ function app(saved) {
     add(value){this.append(value);}
     focus(){}
     select(){}
+    querySelectorAll(selector){const all=[];const walk=e=>{for(const c of e.children){all.push(c);walk(c);}};walk(this);return all.filter(c=>(c.attributes.class||'').split(' ').includes(selector.slice(1)));}
     getAnimations(){return [];}
     getBoundingClientRect(){return {height:320};}
   }
@@ -98,4 +99,10 @@ test('a non-drag pointer release leaves the clicked card attached for click/doub
  const a=app();a.run('render('+JSON.stringify(plan)+')');const before=a.els.get('map').children[0];
  a.run('startDrag({clientX:100,clientY:100,button:0,preventDefault(){},stopPropagation(){}},"leaf")');
  await a.run('pointerUp({pointerId:1})');assert.equal(a.els.get('map').children[0],before);
+});
+
+test('first click selects immediately without replacing the doubleclick target',()=>{
+ const a=app();a.run('render('+JSON.stringify(plan)+')');const group=a.els.get('map').children[0],card=group.children.find(c=>c.attributes['data-node']==='leaf');
+ card.onclick();assert.equal(a.run('selected'),'leaf');assert.equal(card.attributes['data-selected'],'true');assert.equal(a.els.get('map').children[0],group);
+ card.ondblclick({stopPropagation(){}});assert.equal(a.run('editing.id'),'leaf');
 });

@@ -36,7 +36,9 @@ test('plan status updates preserve scrolling while global view recenters explici
   const canvas=a.els.get('canvas');canvas.scrollTop=123;canvas.scrollLeft=47;
   a.run('render('+JSON.stringify({...plan,revision:2})+')');
   assert.equal(canvas.scrollTop,123);assert.equal(canvas.scrollLeft,47);
+  a.els.get('compact').onclick();
   a.els.get('fit').onclick();
+  assert.equal(a.run('compact'),false);
   assert.equal(canvas.scrollLeft,0);assert.notEqual(canvas.scrollTop,123);
 });
 test('manual expansion stays authoritative after a resize and zoom respects bounds',()=>{

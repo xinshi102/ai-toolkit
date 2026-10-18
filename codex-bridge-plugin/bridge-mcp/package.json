@@ -1,0 +1,17 @@
+{
+  "name": "bridge-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH ↔ Codex 协作桥的 Codex 侧取件 MCP（零依赖 stdio，Node 内置模块）",
+  "bin": {
+    "bridge-mcp": "./server.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/stdio-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

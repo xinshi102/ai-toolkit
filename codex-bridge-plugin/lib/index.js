@@ -425,8 +425,16 @@ export function createBridge({ root = DEFAULT_ROOT, now = () => new Date(), disp
     return { status: 200, value: { ok: true, messages: rows } };
   }
 
-  async function messages(sessionIdInput) {
-    const result = await readMessages(sessionIdInput);
+  async function messages(sessionIdInput, options = {}) {
+    const after = cleanText(options.after, 120);
+    const wait = Math.min(30, Math.max(0, Number(options.wait) || 0));
+    const deadline = Date.now() + wait * 1000;
+    let result = await readMessages(sessionIdInput);
+    const hasNew = () => !after || (result.value.ok && result.value.messages.some((row) => row.id > after));
+    while (wait > 0 && result.value.ok && !hasNew() && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      result = await readMessages(sessionIdInput);
+    }
     if (result.value.ok) result.value.messages = result.value.messages.slice(-200);
     return result;
   }
@@ -529,7 +537,11 @@ export function apply(ctx, config = {}) {
         }
         if (req.method === "GET" && pathname === `${API_PATH}/messages`) {
           if (!isLoopback(req)) return json(res, 403, { ok: false, error: "LOCAL_ONLY" });
-          const result = await bridge.messages(new URL(req.url, "http://127.0.0.1").searchParams.get("sessionId"));
+          const params = new URL(req.url, "http://127.0.0.1").searchParams;
+          const result = await bridge.messages(params.get("sessionId"), {
+            after: params.get("after") || "",
+            wait: params.get("wait") || 0,
+          });
           return json(res, result.status, result.value);
         }
         if (req.method !== "POST") return json(res, 405, { ok: false, error: "METHOD_NOT_ALLOWED" });

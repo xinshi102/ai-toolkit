@@ -351,3 +351,23 @@ test("validates reply references and duplicate IDs beyond the public 200-message
   assert.equal(reply.status, 201);
   assert.equal(reply.value.message.status, "received");
 });
+
+test("messages long-polls for a newer message and times out cleanly", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "dsh-bridge-"));
+  const bridge = createBridge({ root });
+  await bridge.authorize({ sessionId: "lp", task: "long poll" });
+  const first = await bridge.message({ sessionId: "lp", direction: "deepseek-to-codex", goal: "g", action: "a", boundary: "b", returnExpected: "r" });
+  const started = Date.now();
+  const pending = bridge.messages("lp", { after: first.value.message.id, wait: 3 });
+  setTimeout(() => {
+    void bridge.message({ sessionId: "lp", direction: "deepseek-to-codex", goal: "g2", action: "a2", boundary: "b2", returnExpected: "r2" });
+  }, 700);
+  const result = await pending;
+  assert.ok(Date.now() - started >= 600, "should wait for the new message");
+  assert.ok(result.value.messages.some((row) => row.id > first.value.message.id));
+
+  const startedAt = Date.now();
+  const timedOut = await bridge.messages("lp", { after: "zzz", wait: 1 });
+  assert.ok(Date.now() - startedAt >= 900, "should hold the request until timeout");
+  assert.ok(Array.isArray(timedOut.value.messages));
+});

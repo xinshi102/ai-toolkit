@@ -45,10 +45,10 @@ Do not delegate an open-ended request such as “build this” without paths, co
 
 ## Launch the managed worker
 
-Use the isolated `codexworker` profile only through:
+Resolve the machine's existing `codexworker-run` launcher and isolated `codexworker` profile first. If either is missing, report that managed execution is unavailable; an installed Hermes CLI alone does not satisfy this requirement. For Windows with WSL, read [WSL access](references/windows-wsl.md). Use the resolved launcher (shown below as `<codexworker-run>`):
 
 ```text
-/Users/xinshi/.local/bin/codexworker-run \
+<codexworker-run> \
   --task-file <absolute-task-contract> \
   --cwd <absolute-project-directory> \
   --timeout <seconds> \
@@ -58,7 +58,7 @@ Use the isolated `codexworker` profile only through:
 For a DeepSeek run, add explicit routing so resumes cannot drift to another provider:
 
 ```text
-/Users/xinshi/.local/bin/codexworker-run \
+<codexworker-run> \
   --task-file <absolute-task-contract> \
   --cwd <absolute-project-directory> \
   --provider deepseek \

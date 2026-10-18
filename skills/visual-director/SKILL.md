@@ -9,7 +9,7 @@ Own the professional translation layer. Never require the user to know camera, c
 
 Match the user's language in every user-visible direction, label, comparison sheet, brief, report, and choice. When the user communicates in Chinese, keep English prompts, node names, and model parameters internal unless they explicitly ask to inspect them; present all decisions and visual comparisons in Chinese.
 
-Use `$generate-images-with-comfyui` for local execution. Use `$canvas-design` when a static-art task needs an explicit visual philosophy before generation. Keep visual direction and final acceptance in Codex.
+For local ComfyUI execution, use `$generate-images-with-comfyui` only when that skill and its runtime are installed. Otherwise use the host's available image-generation capability and state its execution environment. Use `$canvas-design` for a static-art philosophy when that skill is available. Keep visual direction and final acceptance in Codex.
 
 ## Start from human language
 

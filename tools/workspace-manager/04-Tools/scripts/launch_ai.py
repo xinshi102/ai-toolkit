@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Mac/GPT use the same local launcher; app-focus is never called session binding."""
-import argparse,json,subprocess,shlex,sys,fcntl
+import argparse,json,subprocess,shlex,sys,os
 from pathlib import Path
+from file_lock import file_lock
 import governance as g
 CODEX='/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex'
 HERMES='/Users/xinshi/.local/bin/hermes'
 def plan(h, workspace):
+ if os.name=='nt':raise ValueError('Windows native application/session launcher is not configured or verified')
  e=g.entry(h);root=g.local(workspace)
  if not root.is_relative_to(g.W/'01-Projects/AI-Harnesses'): raise ValueError('Unmanaged workspace')
  if h=='codex':return {'mode':'native-workspace-command','argv':[CODEX,'app',str(root)],'binding':'native command supports PATH; runtime UI not yet verified'}
@@ -25,11 +27,12 @@ def main():
  e=g.entry(a.harness)
  if a.action=='plan':return plan(a.harness,e['work_root'])
  if a.action=='open-app':
+  if os.name=='nt':raise ValueError('Windows native application launcher is not configured or verified')
   p={'mode':'app-focus-only','argv':['/usr/bin/open','-a',e['app_path']],'binding':'opens original app; session binding unchanged'}
   return open_plan(p) if a.open else p
  if a.harness not in ('codex','hermes'):raise ValueError('Native session-directory binding not verified; use open-app or wait for specific adapter')
- with g.local(g.W/'08-System/audit/governance.lock').open('a') as f:
-  fcntl.flock(f,fcntl.LOCK_EX);t=g.start(a.harness,a.title)
+ with file_lock(g.local(g.W/'08-System/audit/governance.lock')) as f:
+  t=g.start(a.harness,a.title)
   p=plan(a.harness,t['workspace']);g.audit('launch-session-prepared',{'task_id':t['task_id'],'harness':a.harness,'mode':p['mode']})
  result={'task':t,'launch_plan':p,'opened':False}
  if a.open:

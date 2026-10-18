@@ -1,3 +1,11 @@
+## 2026-10-18 — xinshiimprove 2.0.0-trial.4 execution loop
+
+- 委派检查点（硬性）：非简单任务必须在计划/任务卡写「委派决策：派 N 个（谁、为什么）/ 不派（理由）」，收尾自检回答；防止主控独自做完。
+- 环境判断三行模板：任务类型 / 资源与缺口 / 组织方式。
+- 新增「验收证据」节：项目 / 结果 / 证据表格；子 agent 自报完成不算验收。
+- 交接文件落地：docs/templates/handoff-STATE.md、handoff-inbox.md、scripts/check-handoff.mjs；工作区已建 .work/handoff/STATE.md。
+- 试行范围：仍只做过 DSH 运行验收。
+
 ## 2026-10-16 — xinshiimprove 2.0.0-trial.3 unified entry
 
 - Replace the v1.13 `share/` rules library (ROUTER/collaboration phase gates) with the 2.0.0 unified entry; the skill is now `SKILL.md` + `references/`, and `share/` is retired (still available in git history).

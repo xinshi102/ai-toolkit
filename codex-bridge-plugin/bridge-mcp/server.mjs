@@ -391,6 +391,8 @@ async function toolBridgeReply(args) {
   const context = textField(args?.context, "context");
   const taskId = textField(args?.taskId, "taskId", { max: 120 });
   const clientMessageId = textField(args?.clientMessageId, "clientMessageId", { max: 100 });
+  const senderInput = textField(args?.sender, "sender", { max: 40 });
+  const sender = ["Codex", "OpenCode", "DeepSeek", "信使"].includes(senderInput) ? senderInput : "Codex";
 
   const explicit = args?.agent ?? args?.sessionId;
   const sessionId = explicit ? assertSessionId(explicit) : await resolveSessionForMessage(replyToMessageId);
@@ -399,6 +401,7 @@ async function toolBridgeReply(args) {
     sessionId,
     direction: "codex-to-deepseek",
     kind: "result",
+    sender,
     replyToMessageId,
     goal,
     action,
@@ -517,6 +520,11 @@ const TOOLS = [
         agent: {
           type: "string",
           description: "可选：桥会话 id。省略时按 replyToMessageId 自动定位会话。",
+        },
+        sender: {
+          type: "string",
+          enum: ["Codex", "OpenCode", "DeepSeek", "信使"],
+          description: "可选：回执署名，默认 Codex；OpenCode 回执请传 OpenCode。",
         },
       },
       required: ["replyToMessageId", "goal", "action", "boundary", "returnExpected"],

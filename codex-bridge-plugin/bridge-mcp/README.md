@@ -68,7 +68,9 @@
 向桥 POST 一条回执：direction=codex-to-deepseek、kind=result，并带 replyToMessageId。
 
 必填：replyToMessageId、goal、action、boundary、returnExpected
-可选：workDone、toolsUsed、result、context、taskId、clientMessageId、agent
+可选：workDone、toolsUsed、result、context、taskId、clientMessageId、agent、sender
+
+sender：回执署名（Codex / OpenCode / DeepSeek / 信使），默认 Codex；OpenCode 回执传 `sender=OpenCode`，桥里就不会再显示成 Codex。
 
 agent（桥会话 id）可省略；省略时服务器会扫描 /status 的会话，自动定位 replyToMessageId 所属会话。
 返回里 persisted 表示已落盘、delivered 表示已投递进 DSH 会话、duplicate 表示命中幂等键。

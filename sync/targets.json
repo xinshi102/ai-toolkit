@@ -11,15 +11,13 @@
         },
         {
           "name": "DeepSeek Harness",
-          "kind": "shared-rules",
-          "path": "/Users/xinshi/.dsh/skills/xinshiimprove",
-          "preserve": ["SKILL.md"]
+          "kind": "pointer",
+          "path": "/Users/xinshi/.dsh/skills/xinshiimprove"
         },
         {
           "name": "OpenCode",
-          "kind": "shared-rules",
-          "path": "/Users/xinshi/.config/opencode/skills/xinshiimprove",
-          "preserve": ["SKILL.md"]
+          "kind": "pointer",
+          "path": "/Users/xinshi/.config/opencode/skills/xinshiimprove"
         }
       ],
       "habits": []

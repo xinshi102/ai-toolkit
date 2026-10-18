@@ -7,7 +7,7 @@ export const MIN_ZOOM = 0.7;
 export const MAX_ZOOM = 2;
 export const PADDING = 12;
 export const CANVAS_MIN = 80;
-export const CANVAS_MAX = 280;
+export const CANVAS_MAX = 520;
 
 /** 把任意输入夹到可读缩放区间（保留两位小数）。 */
 export function clampZoom(value) {
@@ -22,12 +22,12 @@ export function clampZoom(value) {
  * @param options {fit?: boolean, zoom?: number}
  * @returns {zoom, padding, viewBox:{width,height}, width, height, canvasHeight, overflowing, offsetX}
  */
-export function graphViewport(layout, availableWidth, { fit = true, zoom = 1 } = {}) {
+export function graphViewport(layout, availableWidth, { fit = true, zoom = 1, maxHeight = CANVAS_MAX } = {}) {
   const width = Math.max(120, Number(layout?.width) || 0) + PADDING * 2;
   const height = Math.max(24, Number(layout?.height) || 0) + PADDING * 2;
   const panel = Math.max(160, (Number(availableWidth) || 0) - 24);
   const widthFit = Math.min(1, panel / width);
-  const scale = fit ? Math.max(MIN_ZOOM, widthFit) : clampZoom(zoom);
+  const scale = fit ? Math.max(1, widthFit) : clampZoom(zoom);
   const scaledWidth = width * scale;
   const scaledHeight = height * scale;
   return {
@@ -36,7 +36,7 @@ export function graphViewport(layout, availableWidth, { fit = true, zoom = 1 } =
     viewBox: { width: Math.ceil(width), height: Math.ceil(height) },
     width: Math.max(120, Math.round(scaledWidth)),
     height: Math.max(60, Math.round(scaledHeight)),
-    canvasHeight: Math.min(CANVAS_MAX, Math.max(CANVAS_MIN, Math.ceil(scaledHeight) + 2)),
+    canvasHeight: Math.min(maxHeight, Math.max(CANVAS_MIN, Math.ceil(scaledHeight) + 2)),
     overflowing: scaledWidth > (Number(availableWidth) || 0) + 1,
     offsetX: Math.max(0, Math.round(((Number(availableWidth) || 0) - scaledWidth) / 2)),
   };

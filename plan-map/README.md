@@ -18,6 +18,7 @@
 - 主机侧 `lib/index.js` 注册两个工具并把计划折叠成 `planTree` 投影；客户端 `lib/client.js` 渲染右侧栏树。
 - 计划树**从官方事件折叠**（`tool/call` 里的 `plan_node`/`plan_import`/`exit_plan_mode`、`todo/write` 推进状态），
   不写任何自定义事件类型——自定义事件会让会话日志整份拒读（见工作区 `docs/architecture.md` §5.1）。
+- 2026-10-16 修复：`tool/ptc-dispatch` 事件现在与 `tool/call` 一起折叠，PTC 派发的计划工具调用也能进树。
 - 安装（本机 profile 手工装法）：`pnpm add file:<本目录>` 装依赖，再在 profile 的
   `cordis.patch.yml` 里加一行 insert 启用。**不要**写进 `dsh.profile.bundles`：
   官方新版内置的 `dsh-plugin-manager` 会重算 bundles，把非它启用的条目清掉。
@@ -30,10 +31,15 @@
   `plugin.json` / `mcp.json` 是分发包描述。
 - 安装：`npm install`；注册 `codex mcp add plan-map -- node <本目录>/server.js`；
   把 `skills/plan-map/` 放到 `~/.codex/skills/plan-map/`。跨电脑必须在目标机装依赖并注册命令。
-- 验证：`npm test`（存储 + 真实 MCP 协议验收）；浏览器交互验收用 `acceptance/ui.py`（需 Playwright）。
+- 验证：`npm test`（本机实测 23 项：存储、真实 MCP 协议、内嵌视图、视口、历史/待办桥接）；浏览器交互验收用 `acceptance/ui.py`（需 Playwright）。
 - 计划数据落在 `~/.codex/plan-map/<planId>.json`（`PLAN_MAP_HOME` 可改），**不进仓库**。
-- 注意：`skills/plan-map/SKILL.md` 里保留了本机源码路径（`~/Documents/deepseek/work/dshworkspace/adapters/codex-plan-map/`）；
+- 注意：`skills/plan-map/SKILL.md` 里保留了本机源码路径（`E:/AI-Workspace/Projects/Shared/Plan-Map/codex/`）；
   仓库内的对应内容是 `codex/`，换机使用时按本目录路径调整。
+
+## 版本
+
+- Codex 版：`0.6.0`（MCP App `ui://xinshi-plan-map/v8.html`，v3–v7 兼容），`plan_batch`/`plan_history`/`plan_dashboard` 与宿主待办桥接见 [codex/README.md](codex/README.md)。
+- DSH 版：`0.1.1`（含 `tool/ptc-dispatch` 折叠修复）。
 
 ## 两个版本的关系
 
@@ -41,7 +47,7 @@
 
 ## 来源
 
-本仓库内是本机版本的快照（2026-10-10）：
+本仓库内是本机版本的快照（2026-10-16）：
 
-- `dsh/` ← `dshworkspace/plugins/plan-map/`
-- `codex/` ← `dshworkspace/adapters/codex-plan-map/`（已排除 `node_modules`）
+- `dsh/` ← `E:/AI-Workspace/Projects/Shared/Plan-Map/dsh/`
+- `codex/` ← `E:/AI-Workspace/Projects/Shared/Plan-Map/codex/`（已排除 `node_modules`）

@@ -86,22 +86,17 @@ sync_target() {  # sync_target <component> <canonical> <name> <kind> <path>
         fi
       fi
       ;;
-    shared-rules)
-      if [[ ! -d "$target/share" ]]; then
-        echo "  missing share directory"
+    pointer)
+      if [[ ! -f "$target/SKILL.md" ]]; then
+        echo "  MISSING"
         failed=1
         return
       fi
-      if diff -qr "$canonical/share" "$target/share" >/dev/null 2>&1; then
-        echo "  shared rules current; tool entry point preserved"
+      if grep -qiE 'canonical|正本' "$target/SKILL.md"; then
+        echo "  pointer entry intact; canonical skill not copied"
       else
-        echo "  shared rules differ"
-        if [[ "$MODE" == "--apply" ]]; then
-          backup "$target/share" "$component-${name// /_}-share"
-          rm -rf "$target/share"
-          cp -R "$canonical/share" "$target/share"
-          echo "  shared rules updated"
-        fi
+        echo "  pointer entry does not look like a redirect; review manually"
+        failed=1
       fi
       ;;
     *)

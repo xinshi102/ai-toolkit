@@ -1,3 +1,15 @@
+## 2026-10-16 — xinshiimprove 2.0.0-trial.3 unified entry
+
+- Replace the v1.13 `share/` rules library (ROUTER/collaboration phase gates) with the 2.0.0 unified entry; the skill is now `SKILL.md` + `references/`, and `share/` is retired (still available in git history).
+- The entry requires an environment judgment before non-trivial work, master-controlled task tracking, tiered same-harness/cross-harness collaboration, and a shared `.work/handoff/STATE.md` for cross-harness handoff.
+- Runtime adoption was verified in DSH only; other harnesses, real cross-harness handoff and persistent scheduling remain unproven.
+
+## 2026-10-15 — Plan Map 0.6.0 (Codex) + DSH ptc-dispatch fix
+
+- Codex 0.6.0: v8 MCP App resource (v3–v7 compatible), `plan_batch`/`plan_history`/`plan_dashboard`, isolated planning/maintenance tests, embedded-resource compile fix, and the PostToolUse maintenance hook bridging native `update_plan`.
+- DSH 0.1.1: plan tools dispatched through `tool/ptc-dispatch` now fold into the plan tree like `tool/call`.
+- Local verification: Codex 23/23 and DSH 56/56 isolated tests. Host reconnection, the real chat embedded view and real `update_plan` events are not proven by these tests alone.
+
 ## 2026-10-13 — Plan Map 0.5.0 interaction parity
 
 - Add free positioning/reset, drag reparenting, canvas pan, inline rename and ancestor-path highlighting.

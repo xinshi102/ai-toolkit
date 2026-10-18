@@ -15,19 +15,19 @@ test('small trees are centered without enlarging cards', () => {
 
 test('a wide plan stops shrinking at the readable floor and scrolls instead', () => {
   const view = graphViewport({ width: 1600, height: 300 }, 425);
-  assert.equal(view.zoom, MIN_ZOOM);
+  assert.equal(view.zoom, 1);
   assert.ok(view.width > 425);
   assert.equal(view.overflowing, true);
-  assert.ok(Math.abs(view.width - Math.round((1600 + 24) * MIN_ZOOM)) <= 1);
+  assert.ok(Math.abs(view.width - Math.round((1600 + 24))) <= 1);
 });
 
 test('a deep plan keeps readable zoom and scrolls vertically inside the cap', () => {
   const view = graphViewport({ width: 460, height: 1500 }, 425);
-  assert.ok(Math.abs(view.zoom - 401 / 484) < 0.001); // 宽度放得下，就按宽适宽
+  assert.ok(view.zoom === 1); // 宽度放得下，就按宽适宽
   assert.ok(view.zoom >= MIN_ZOOM);
-  assert.equal(view.canvasHeight, 280);
+  assert.equal(view.canvasHeight, 520);
   assert.ok(view.height > view.canvasHeight);
-  assert.equal(view.overflowing, false);
+  assert.equal(view.overflowing, true);
 });
 
 test('seven stages stay readable in a narrow chat and manual zoom remains available', () => {

@@ -290,7 +290,10 @@ export function foldTree(state, event, limits = {}) {
   // 主路径：官方 `tool/call`。harness 把模型的工具参数以 **JSON 字符串** 原样写在这里，
   // 所以整棵树都能从官方事件重建——插件不再写 plan/node、plan/import 这类自定义事件
   // （写自定义类型会让宿主读会话日志时整份拒读，见 docs/architecture.md §5.1）。
-  if (event.type === "tool/call") {
+  // PTC 模式：模型只能直接调 run_code，其内部调用的工具由 harness 记为
+  // tool/ptc-dispatch（而非 tool/call）。计划工具必须同样从这类事件折叠，
+  // 否则在只暴露 run_code 的会话里计划树永远是空的。
+  if (event.type === "tool/call" || event.type === "tool/ptc-dispatch") {
     const toolName = event.data?.name;
     if (toolName === "plan_node") {
       const args = parseCallArgs(event);
@@ -678,6 +681,7 @@ function stateBeforeCall(session, callId, limits) {
   let state = initialTreeState();
   for (const event of events) {
     if (typeof callId === "string" && callId !== "" && event?.type === "tool/call" && event.data?.callId === callId) break;
+    if (typeof callId === "string" && callId !== "" && event?.type === "tool/ptc-dispatch" && (event.data?.subCallId === callId || event.data?.callId === callId)) break;
     state = foldTree(state, event, limits);
   }
   return state;

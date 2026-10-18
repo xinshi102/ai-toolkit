@@ -1,10 +1,6 @@
 # Cross-harness task handoff
 
-Use this when Codex and DSH work on the same objective. The canonical schema is maintained at:
-
-`/Users/xinshi/Documents/deepseek/work/dshworkspace/docs/cross-harness-task-contract.md`
-
-Read that file before creating or changing a bridge message contract. Keep the durable task card and progress file in the shared project/workspace; the bridge carries a task ID and concise work packet, not a second copy of the entire task history.
+Use this when harnesses work on the same objective. Read the active shared project's existing task/bridge contract before creating or changing a bridge message contract. For the common handoff packet, use `E:/AI-Workspace/Projects/Shared/Agent-Conventions/handoff_prompt_template.md`. The old macOS contract is not present on this machine; do not invent a bridge endpoint or claim that a bridge has been configured. Keep the durable task card and progress file in the shared project/workspace; the bridge carries a task ID and concise work packet, not a second copy of the entire task history.
 
 ## Minimum handoff
 

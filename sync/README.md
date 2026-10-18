@@ -28,7 +28,7 @@ bash scripts/sync-skills.sh --apply --component xinshiimprove
 ## 更新和恢复
 
 - `full-copy`：备份现有目录到 `.sync-backups/` 后替换整个Skill目录；本机修改先合并。
-- `shared-rules`：仅备份和替换 `share/`，保留宿主的 `SKILL.md`。
+- `pointer`：只检查宿主的 `SKILL.md` 是否仍是指向正本的指针；不复制正文、不覆盖。`xinshiimprove` 2.0.0 起已无 `share/`，原先的 `shared-rules` 目标改为此类型。
 - `habits`的 `format: copy`：备份后替换指定文件，先确认文件属于更新范围。
 - `habits`的 `format: append`：只报告需要审阅，不自动编辑。
 - 来源/目标缺失或类型不支持时报告问题，不按已同步记录。

@@ -26,7 +26,7 @@ function app(saved) {
   const window={addEventListener(){}};
   const document={body:new Element(),getElementById(id){if(!els.has(id))els.set(id,new Element());return els.get(id);},createElementNS(){return new Element();},createElement(){return new Element();},addEventListener(){}};
   const ctx=vm.createContext({layoutTree,truncateToWidth,linkPath,STATUS_GLYPH,ancestorPath,validParent,movedOffset,manualLayout,graphViewport,clampZoom,MIN_ZOOM,document,window,parent:{postMessage(){}},location:{search:''},URLSearchParams,matchMedia:()=>({matches:true}),ResizeObserver:class{observe(){}},setTimeout(){return 1;},setInterval(){},clearTimeout(){},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},Option:class{}});
-  vm.runInContext(readFileSync(new URL('../web/app.js',import.meta.url),'utf8').replace(/^import .*;\n/gm,''),ctx);
+  vm.runInContext(readFileSync(new URL('../web/app.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,''),ctx);
   return {document,run:code=>vm.runInContext(code,ctx),els,storage};
 }
 const plan={planId:'embedded',title:'Plan',revision:1,updatedAt:'2026-10-13',progress:{percent:0,done:0,total:2},current:[],nodes:[{id:'root',title:'Root',parent:'',status:'pending'},{id:'branch',title:'Branch',parent:'root',status:'pending'},{id:'leaf',title:'Leaf',parent:'branch',status:'pending'}]};
@@ -44,7 +44,7 @@ test('plan status updates preserve scrolling while global view recenters explici
   assert.equal(canvas.scrollTop,123);assert.equal(canvas.scrollLeft,47);
   a.els.get('compact').onclick();
   a.els.get('fit').onclick();
-  assert.equal(a.run('compact'),false);
+  assert.equal(a.run('compact'),true);
   assert.equal(canvas.scrollLeft,0);assert.notEqual(canvas.scrollTop,123);
 });
 test('manual expansion stays authoritative after a resize and zoom respects bounds',()=>{
@@ -75,7 +75,7 @@ test('dropping onto another card uses the fresh revision and clears only the mov
  assert.equal(validParent(value.nodes,'root','leaf'),false);
 });
 test('inline rename submits once on Enter and Escape cancels without a write',async()=>{
- const a=app();a.run('render('+JSON.stringify(plan)+');globalThis.sent=[];call=async(name,args)=>{sent.push({name,args});return {...state,revision:42};};startRename("leaf")');
+ const a=app();a.run('render('+JSON.stringify(plan)+');globalThis.sent=[];call=async(name,args)=>{sent.push({name,args});return {...state,revision:42};};collapsedTouched=true;collapsed.clear();render(state);startRename("leaf")');
  const svg=a.els.get('map'),input=svg.children.at(-1).children[0];input.value='Updated';input.onkeydown({key:'Enter',stopPropagation(){},preventDefault(){}});await new Promise(r=>setImmediate(r));input.onblur();
  assert.equal(a.run('sent.filter(s=>s.name==="plan_node").length'),1);assert.equal(a.run('sent.at(-1).args.title'),'Updated');
  a.run('startRename("leaf")');const other=svg.children.at(-1).children[0];other.value='Cancelled';other.onkeydown({key:'Escape',stopPropagation(){},preventDefault(){}});other.onblur();await new Promise(r=>setImmediate(r));assert.equal(a.run('sent.filter(s=>s.name==="plan_node").length'),1);
@@ -102,7 +102,9 @@ test('a non-drag pointer release leaves the clicked card attached for click/doub
 });
 
 test('first click selects immediately without replacing the doubleclick target',()=>{
- const a=app();a.run('render('+JSON.stringify(plan)+')');const group=a.els.get('map').children[0],card=group.children.find(c=>c.attributes['data-node']==='leaf');
+ const a=app();a.run('render('+JSON.stringify(plan)+')');a.els.get('expand').onclick();const group=a.els.get('map').children[0],card=group.children.find(c=>c.attributes['data-node']==='leaf');
  card.onclick();assert.equal(a.run('selected'),'leaf');assert.equal(card.attributes['data-selected'],'true');assert.equal(a.els.get('map').children[0],group);
  card.ondblclick({stopPropagation(){}});assert.equal(a.run('editing.id'),'leaf');
 });
+
+ test('restores full-size normal view and saved compact preference',()=>{const a=app({compact:false});a.run('render('+JSON.stringify(plan)+')');assert.equal(a.run('compact'),false);assert.equal(a.run('currentView.zoom'),1);});

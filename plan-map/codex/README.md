@@ -6,9 +6,9 @@
 
 本机已通过 `codex mcp add plan-map -- .../node .../server.js` 注册启用，技能在 `~/.codex/skills/plan-map/SKILL.md`。当前对话的工具清单不会因注册命令自动改变；新对话/刷新宿主后应检查 plan-map 工具是否出现。
 
-四个工具：`plan_list`、`plan_import`、`plan_node`、`plan_view`。导入使用稳定 planId；重开对话先读取旧计划。现有计划任何改动都需要最新 expectedRevision；发生冲突重新读取，不盲目覆盖。最多 200 个节点。
+七个工具：`plan_list`、`plan_import`、`plan_node`、`plan_view`、`plan_batch`、`plan_history`、`plan_dashboard`。导入使用稳定 planId；重开对话先读取旧计划。现有计划任何改动都需要最新 expectedRevision；发生冲突重新读取，不盲目覆盖。最多 200 个节点。
 
-MCP App 资源为 `ui://xinshi-plan-map/v6.html`，遵循 MCP Apps UI bridge，只有 plan_view 关联 UI。默认仅在对话内显示 MCP App，不为验证显示而自动打开右侧浏览器。无法确认内嵌显示时应报告限制；只有用户明确要求浏览器版时才打开 plan_view 返回的 viewerUrl。用户截图已确认本机内嵌显示；新版本布局仍需宿主重连后验收。
+MCP App 资源为 `ui://xinshi-plan-map/v8.html`（v3–v7 兼容读取），遵循 MCP Apps UI bridge，只有 plan_view 关联 UI。默认仅在对话内显示 MCP App，不为验证显示而自动打开右侧浏览器。无法确认内嵌显示时应报告限制；只有用户明确要求浏览器版时才打开 plan_view 返回的 viewerUrl。用户截图已确认本机内嵌显示；新版本布局仍需宿主重连后验收。
 
 持久数据默认在 `~/.codex/plan-map/<planId>.json`。PLAN_MAP_HOME 可设置独立位置，便于验收隔离。服务只监听 127.0.0.1，端口由系统分配；浏览器请求检查 Host、Origin 与本次进程随机令牌。不会读取聊天记录、调用模型或上传计划。计划可能含私密内容，不把数据目录提交到 GitHub。
 
@@ -82,3 +82,15 @@ MCP App 资源为 `ui://xinshi-plan-map/v6.html`，遵循 MCP Apps UI bridge，�
 卡片拖空白自由摆放，拖到有效卡片改父子；空白拖动平移；双击卡片就地改名；选中高亮祖先路径，其他分支淡出。采用圆角折线（自由布局反向连线也不退回三次贝塞尔）、○●✓!状态字形、根底纹、备注点和CSS悬停/选择/落点态。手工位置仅保存到按planId区分的本地视图偏好，不改计划数据/存储。自动布局可复位，循环父子关系在界面与Store双层拒绝。保留0.4.0缩放、折叠+n、滚动和偏好行为。
 
 UI资源v7，v3-v6兼容读取；首次加载新界面需要宿主重连MCP。npm test含隔离DOM/宿主交互及真实MCP协议验收，真实425/360页面验证与截图在reports/parity-*（不发布用户数据）。
+
+## 0.6.0：历史与批量维护、自动待办桥接
+
+- 新增 `plan_batch`（一次提交多个节点修改，带 expectedRevision 冲突保护）与 `plan_history`（读取修改历史，支持回放）；
+  `plan_dashboard` 保留为会话面板入口声明。
+- UI 资源升到 `ui://xinshi-plan-map/v8.html`，v3–v7 兼容读取。内嵌生成改为按模块拼接后编译，
+  修掉了 `viewport.js` 中 `replaceAll('export ')` 漏写替换值导致的最终资源 `undefinedconst`（旧检查只看模块文本，不能证明最终内嵌脚本可执行）。
+- 宿主待办桥接：`maintenance-hook.js` 挂在 Codex 用户级 PostToolUse 钩子上，只有成功的 `plan_view`/`plan_import`
+  才把当前对话与计划绑定（按 session_id 与 transcript_path），原生 `update_plan` 事件折叠进独立的「宿主待办联动」分支；
+  不读 transcript 内容、不推断完成状态、不覆写人工分支。真实宿主事件端到端仍属待验收，不把钩子被信任当作已触发。
+- 验收：本机 `npm test` 23/23 通过（存储、真实 MCP 协议、内嵌视图、视口、历史/待办桥接）；
+  另新增 `acceptance/planning.test.js`、`acceptance/maintenance.test.js` 等隔离用例。实际聊天重连后的 v8 内嵌交互仍需单独确认。

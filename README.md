@@ -51,7 +51,7 @@ git rev-parse HEAD
 
 阅读所选 `SKILL.md` 与必要引用。按当前宿主支持的目录安装整个组件，包括 `references/`、`scripts/`、`agents/`、`assets/` 等配套内容，不只复制正文。已有同名版本先备份和比较，保留用户修改、本机路径与宿主专用入口。
 
-`xinshiimprove` 可跨宿主共用 `share/`，但不能用Codex入口一律覆盖DSH、Hermes或OpenCode入口。发现外部依赖缺失时先补齐或标记待适配，不宣称复制文件即可运行。
+`xinshiimprove` 2.0.0 起正文即 `SKILL.md` + `references/`，不再有 `share/` 共享库；各宿主的 `SKILL.md` 可以是指向正本的指针文件，不要用Codex入口整份覆盖DSH、Hermes或OpenCode入口。发现外部依赖缺失时先补齐或标记待适配，不宣称复制文件即可运行。
 
 ### DSH 插件
 
@@ -83,7 +83,7 @@ bash scripts/sync-skills.sh --check --component xinshiimprove
 bash scripts/sync-skills.sh --apply --component xinshiimprove
 ```
 
-`full-copy` 会备份后替换整个目标目录，有本机改动先合并；`shared-rules`只更新 `share/`，保留宿主入口。Windows没有合适Bash环境时，用本机工具执行同样的比较、备份、复制流程。详情见 [同步说明](sync/README.md)。
+`full-copy` 会备份后替换整个目标目录，有本机改动先合并；`pointer` 只核对宿主 `SKILL.md` 是否仍指向正本，不改正文。Windows没有合适Bash环境时，用本机工具执行同样的比较、备份、复制流程。详情见 [同步说明](sync/README.md)。
 
 ## 6. 验证、留档与回滚
 

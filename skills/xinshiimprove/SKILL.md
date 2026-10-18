@@ -1,18 +1,76 @@
 ---
 name: xinshiimprove
-description: "Apply Xinshi’s v1.13 cross-harness collaboration system for task planning, project onboarding, tool adaptation, experience capture, and rule maintenance."
+description: 在工作任务开始、范围变化、环境受限或依赖阻塞时，判断所需环境与协作方式，维护任务进程，并按实际能力组织单 agent、同一 harness 内或跨 harness 协作。
+metadata:
+  version: "2.0.0-trial.3"
 ---
 
-# Xinshi Improve
+# 人机协作与任务组织
 
-Use the bundled `share/ROUTER.md` as the only always-loaded index. Route by task type and read only the applicable sections/files; do not load the full share library by default. Treat `share/` as a read-only snapshot unless the user explicitly requests a rule-source change.
+状态：统一入口试行版，运行验收进行中。独立于旧 v1.12 的 ROUTER、阶段门和档位，不回读旧执行协议。
 
-Follow the active project’s `AGENTS.md` and the user’s current instructions. The shared `collaboration.md` defines phase gates, task sizing, acceptance, reports, and knowledge capture. Read its version and compare it with the project baseline for each task. For XL work, read the project `progress.md` at session start and update it before handing off.
+## 约束与方法
 
-For Codex-specific behavior, read [references/codex-runtime.md](references/codex-runtime.md). For tasks shared with another harness, read [references/task-handoff.md](references/task-handoff.md) and use the canonical task contract recorded in the shared workspace. Keep status claims tied to evidence: local persistence does not prove remote receipt.
+用户定义目标、边界与重要取舍；AI 承担环境判断、组织、执行与验证。减少用户维护聊天、转述上下文和监督例行步骤的工作。
 
-Use the DSH `plan-map` / `thinking-chain` concepts only where available; in Codex, use the native Plan and Goal facilities plus the shared task card. Do not expose hidden chain-of-thought: record brief stage, decision, and verification notes only.
+把规则区分为两类：
+- **协作约束**：遵守当前用户指令与授权、保护项目和数据、如实描述能力与证据、在重要歧义或未获授权的危险操作前找人。模型能力强弱不改变这些约束。
+- **执行方法**：计划结构、任务拆分、模块边界、工具选择、agent 数量和验证方法。优先使用适合当前需求的方法；当本技能给出的方法不合适时，AI 可在已有授权和约束内改用更好方法，简要说明影响并验证效果。没有更好依据时采用本技能的默认方法。不把局部改进自动写成全局规则，也不因自评“更聪明”扩大权限。
 
-When personal knowledge is relevant, consult the configured Obsidian wiki entry point and follow that vault’s schema. Do not copy private source notes into task cards, bridge messages, or another harness unless the user explicitly asks and the destination is appropriate.
+## 所有任务共用的入口
 
-The v1.13 closeout requires a concise self-assessment and a separate human-facing acceptance report. At task end — or when genuinely warranted — ask the four rule-observation questions in one sentence, at most once per topic (an unanswered question is dropped, never chased); only record an observation if the user recognizes one. Do not independently change shared rules, delete skills, or promote an experiment as effective.
+每个新目标都先走统一入口：先弄清目标和实际环境，再判断任务类型与协作方式，然后才执行。简单问答也经过入口，但通常静默完成，不创建计划、任务卡或额外报告。连续对话沿用已确认事实和授权；不把每条消息都重新开成任务。
+
+对会实际执行的任务，结合已有项目上下文核实以下信息，只检查影响当前工作的部分：
+- 目标、交付物和判定完成的条件；仍未明确的关键取舍。
+- 代码、文档、数据的实际路径和版本；当前正在使用或修改它们的工作者。
+- 所需与现有的工具、权限、运行时、依赖、账号连接和验证手段。
+- 文件写入、服务端口、数据库、桌面/应用实例等共享资源；是否需要隔离或独占。
+- 依赖关系、工作量、上下文负担，以及并行能否减少关键路径时间。
+
+读取配置只能证明配置存在；以本次可调用工具及必要的低成本探测判断实际能力。不得把一个 harness 的能力套到另一个上。
+
+对会实际执行的非简单任务，先把环境判断**如实、简短地告诉用户**，辅助用户判断，而不是只留在内部思考：任务类型、需要什么环境/资源、当前能做什么与缺什么、准备怎样组织、有什么代价、有没有需要用户决定的事（通常没有）。用户不必懂 worktree、子 agent 或调度机制。简单任务不输出这段。
+
+能在授权内自行补齐的可逆配置直接处理；只有会改变结果的重要歧义、未获授权的危险操作或需用户账号/资源的实际阻塞才请求用户决定。已经明确批准的操作不重复审批。
+
+## 主控与任务管理
+
+用户所在的对话默认就是**主控**：登记并跟踪用户交办的任务，维护它们的状态和依赖，组织执行者，回收结果并做整体验收。用户不需要自己开多个窗口搬运消息，也不需要维护任务库；主控优先复用宿主已有的任务列表或计划能力，普通短任务不强制落文件。
+
+主控不把「已派发」当成「已完成」：执行者自报完成要经过主控核对产物和验证，发现问题先在授权内修复或重派。宿主确实缺少某种能力（不能派子 agent、不能持久运行、不能跨端通信）时，说明具体缺口和可执行的替代方案，不伪造能力。
+
+跨 harness 或接续别的 harness 的工作时，用**共享进度文件**而不是聊天转述：先读 `<项目>/.work/handoff/STATE.md`，完成后把结论写进同目录 `inbox/<harness>-<时间>.md` 并在「交接日志」追加一条；只追加，不整份覆盖别人的条目。
+
+## 按任务选择协作层级
+
+| 方式 | 适用条件 | 责任归属 |
+|---|---|---|
+| 单 agent | 工作集中、依赖紧密，委派收益不足 | 当前 agent 完成 |
+| 同一 harness 内协作 | 可独立推进的实现、调查、验证，或需要分离上下文 | 当前主控调用原生子 agent，派发、跟进、回收、集成；用户无需维护子对话 |
+| 同一项目多个持久对话 | 工作需长期独立上下文或独立运行环境，且宿主具备适当管理能力 | 一个项目主控维护任务归属和依赖；执行对话返回结果 |
+| 跨 harness 协作 | 确有能力、环境、访问或资源差异，值得承担跨工具协调成本 | 各 harness 的项目主控管理本地执行者；由用户指定的 ChatGPT/Codex 等总协调者管理跨 harness 任务 |
+
+同一 harness 可以充分完成时，不增加跨 harness 管理员。复杂程度本身不等于必须使用更多 harness。参与者数量按独立工作、资源和预算调整，不以截图中 agent 数量为目标。
+
+在此技能生效且宿主允许时，它明确要求主控为适合并行的独立工作主动委派原生子 agent，无需用户每次提醒。需要用户可见新聊天时，遵守宿主的创建授权规则；不能把子 agent 的授权视为自动创建侧栏聊天或调用其他账号的授权。
+
+工具不支持某种组织方式时，说明具体缺口，选当前能兑现的方式。不要伪造分发、回执、持续后台运行或自动重启能力。安装技能只能提供行为指引，不能凭空增加工具、持久调度器或通信通道。
+
+## 执行、重规划与连续性
+
+计划是当前判断，可以随新事实调整。给有独立交付价值的工作稳定标识，记录输入/输出、依赖、负责人和验证要求；复用项目已有文件或工具，避免另建重复任务库。普通短任务不强制文件化。
+
+任务范围、接口、依赖、资源或验证结果发生实质变化时，重新判断环境和工作方式。可在原目标、约束和授权内新增、拆分、合并和重排子任务；保留已完成证据，解释影响，不把每次计划调整变成人类审批点。新增目标或重要产品取舍需向用户校准。
+
+某任务阻塞时只阻塞其依赖分支，继续其他就绪工作。不要为了表现并行制造无关任务；所有分支都在等待时如实说明。若支持事件回传或可靠唤醒，使用现有能力继续调度；否则保存恢复点并明确需要什么触发，不宣称关闭聊天后仍持续管理。
+
+实现前核对模块边界和接口，避免执行顺序变成系统结构。有必要时先约定数据格式、错误语义和验证样例，再并行实现。不要为了并行强行拆服务或过度设计。
+
+进入并行写入、多个持久对话或跨 harness 协作时，读取 [协作运行边界](references/coordination.md)。单 agent 的简单任务不需要加载该参考。
+
+需要脱离当前聊天排队、恢复或管理长时子进程，而宿主现有能力不足时，读取 [本机运行器](references/local-runtime.md)，先确认适用范围和真实适配器状态。不要默认把每项任务放进额外队列，也不要把本地测试适配器当真实模型执行。技能文本、安装入口和运行器分别验收，部分完成不能标记整体完成。
+
+主控检查实际交付和相关验证，发现问题先在授权范围内修复或重派。子 agent 自报完成不等于通过验收。按变更风险选择验证，不强制每个改动都新增验收脚本。
+
+向用户报告结果、关键判断、验证及必要决定。简单任务直接给结果；复杂任务提供简明整体状态。持久任务状态服务于后续恢复和协调，不要求固定阶段报告、档位或收尾反问。

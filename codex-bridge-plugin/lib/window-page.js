@@ -31,6 +31,13 @@ button,select{font:inherit}button{cursor:pointer}.topbar{height:76px;padding:0 2
 .task-card.done .task-state{background:#e8f7f1;color:var(--green)}
 .task-card.blocked .task-state{background:#fdeeee;color:#b84949}
 .task-empty{padding:14px;color:var(--muted);font-size:12px}
+.task-command{display:flex;align-items:center;gap:8px;padding:9px clamp(16px,3.2vw,48px);border-bottom:1px solid var(--line);background:var(--panel)}
+.task-command-title{font-size:11px;font-weight:750;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+.task-target{border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);font-size:11px;padding:6px 8px}
+.task-input{flex:1;min-width:120px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);font-size:12px;padding:7px 10px;outline:none}
+.task-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(71,104,245,.12)}
+.task-send{border:0;border-radius:9px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:7px 13px}
+.task-status{font-size:11px;color:var(--muted);min-width:56px}
 </style>
 </head>
 <body>
@@ -40,7 +47,7 @@ button,select{font:inherit}button{cursor:pointer}.topbar{height:76px;padding:0 2
   <div class="actions"><button id="toggleSidebar" class="btn">隐藏边栏</button><button id="openDeepSeekBrowser" class="btn">浏览器版</button><button id="openDeepSeek" class="btn primary">DeepSeek 桌面版</button><button id="openCodex" class="btn">打开 Codex</button><button id="openOpenCode" class="btn">打开 OpenCode</button></div>
 </header>
 <main class="shell">
-  <section class="conversation"><div class="conversation-head"><div><div class="conversation-title">多 Harness 协作对话</div><div id="conversationCount" class="conversation-note">正在读取参与方消息…</div></div><div class="live">自动刷新</div></div><div id="taskBoard" class="task-board"><div class="task-empty">任务进度板加载中…</div></div><div id="timeline"><div class="empty">正在读取协作记录…</div></div></section>
+  <section class="conversation"><div class="conversation-head"><div><div class="conversation-title">多 Harness 协作对话</div><div id="conversationCount" class="conversation-note">正在读取参与方消息…</div></div><div class="live">自动刷新</div></div><div id="taskCommand" class="task-command"><span class="task-command-title">下指令</span><select id="commandTarget" class="task-target"><option value="DSH">给 DSH</option><option value="Codex">给 Codex</option></select><input id="commandText" class="task-input" placeholder="写下要谁做什么，回车发送…" /><button id="commandSend" class="task-send">发送</button><span id="commandStatus" class="task-status"></span></div><div id="taskBoard" class="task-board"><div class="task-empty">任务进度板加载中…</div></div><div id="timeline"><div class="empty">正在读取协作记录…</div></div></section>
   <aside class="sidebar">
     <div class="side-title">当前协作</div><div class="card"><div class="card-title">会话</div><select id="session" class="select"></select><div id="auth" class="pill">正在读取授权状态…</div></div>
     <div class="side-title">连接</div><div class="card"><div class="card-title">Codex 网络</div><div class="card-copy">遵循 macOS 当前的代理与网络设置。</div><button id="network" class="side-button">重新检查</button><div id="networkStatus" class="pill">打开 Codex 前自动检查</div></div>
@@ -62,5 +69,8 @@ async function checkNetwork(){networkStatus.className='pill';networkStatus.textC
 toggleSidebar.onclick=()=>{const focused=shell.classList.toggle('focus');toggleSidebar.textContent=focused?'显示边栏':'隐藏边栏';localStorage.setItem('dsh-collab-sidebar',focused?'hidden':'shown')};if(localStorage.getItem('dsh-collab-sidebar')==='hidden'){shell.classList.add('focus');toggleSidebar.textContent='显示边栏'};
 $('#network').onclick=checkNetwork;$('#openDeepSeek').onclick=async()=>{try{await api(apiRoot+'/open-deepseek-desktop',{method:'POST'})}catch(e){auth.className='pill bad';auth.textContent='打开桌面版失败：'+e.message}};$('#openDeepSeekBrowser').onclick=async()=>{try{await api(apiRoot+'/open-deepseek-browser',{method:'POST'})}catch(e){auth.className='pill bad';auth.textContent='打开浏览器版失败：'+e.message}};$('#openCodex').onclick=async()=>{if(!await checkNetwork())return;try{await api(apiRoot+'/open-codex',{method:'POST'});networkStatus.textContent='网络可用 · Codex 已打开'}catch(e){networkStatus.className='pill bad';networkStatus.textContent='打开失败：'+e.message}};$('#openOpenCode').onclick=async()=>{try{await api(apiRoot+'/open-opencode',{method:'POST'});auth.className='pill ok';auth.textContent='OpenCode 已打开；消息操作仍需逐次确认'}catch(e){auth.className='pill bad';auth.textContent='打开 OpenCode 失败：'+e.message}};session.onchange=()=>{userSelectedSession=true;refresh()};
 refresh().catch(e=>timeline.innerHTML='<div class="empty">读取失败：'+e.message+'</div>');checkNetwork();setInterval(()=>refresh().catch(()=>{}),2500);
+const commandTarget=$('#commandTarget'),commandText=$('#commandText'),commandSend=$('#commandSend'),commandStatus=$('#commandStatus');
+async function sendCommand(){const value=commandText.value.trim();if(!value)return;const sessionId=session.value;if(!sessionId){commandStatus.textContent='先选会话';return}const to=commandTarget.value;const body={sessionId:sessionId,sender:'信使',recipient:to,kind:'command',goal:'信使指令',action:value,boundary:'来自协作窗口任务板的指令',returnExpected:'收到后回执'};body.direction=to==='Codex'?'deepseek-to-codex':'codex-to-deepseek';commandStatus.textContent='发送中…';try{const r=await api(apiRoot+'/message',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});commandStatus.textContent=r&&r.message?'已发送':'已发送';commandText.value='';refresh()}catch(e){commandStatus.textContent='失败：'+e.message}}
+commandSend.onclick=sendCommand;commandText.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCommand()}});
 </script></body></html>`;
 }

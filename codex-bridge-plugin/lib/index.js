@@ -248,7 +248,7 @@ export function createBridge({ root = DEFAULT_ROOT, now = () => new Date(), disp
     if (!sessionId) return { status: 400, value: { ok: false, error: "INVALID_SESSION" } };
     const clientMessageId = cleanText(input.clientMessageId, 100);
     const replyToMessageId = cleanText(input.replyToMessageId, 100);
-    const allowedAgents = new Set(["Codex", "DeepSeek", "OpenCode"]);
+    const allowedAgents = new Set(["Codex", "DeepSeek", "OpenCode", "信使"]);
     const senderInput = cleanText(input.sender, 40);
     const sender = allowedAgents.has(senderInput) ? senderInput : direction === "codex-to-deepseek" ? "Codex" : "DeepSeek";
     const recipientInput = cleanText(input.recipient, 40);
@@ -275,7 +275,7 @@ export function createBridge({ root = DEFAULT_ROOT, now = () => new Date(), disp
       goal: cleanText(input.goal),
       context: cleanText(input.context),
       action: cleanText(input.action),
-      kind: input.kind === "result" ? "result" : input.kind === "request" ? "request" : "",
+      kind: input.kind === "result" ? "result" : input.kind === "request" ? "request" : input.kind === "command" ? "command" : "",
       workDone: cleanText(input.workDone),
       toolsUsed: cleanText(input.toolsUsed),
       result: cleanText(input.result),

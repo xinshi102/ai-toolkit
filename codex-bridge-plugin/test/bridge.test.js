@@ -371,3 +371,16 @@ test("messages long-polls for a newer message and times out cleanly", async () =
   assert.ok(Date.now() - startedAt >= 900, "should hold the request until timeout");
   assert.ok(Array.isArray(timedOut.value.messages));
 });
+
+test("accepts 信使 as a sender and keeps the command kind", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "dsh-bridge-"));
+  const bridge = createBridge({ root });
+  const sent = await bridge.message({
+    sessionId: "cmd", direction: "deepseek-to-codex", sender: "信使", recipient: "Codex",
+    kind: "command", goal: "信使指令", action: "做一件事", boundary: "来自任务板", returnExpected: "回执",
+  });
+  assert.equal(sent.status, 201);
+  assert.equal(sent.value.message.sender, "信使");
+  assert.equal(sent.value.message.recipient, "Codex");
+  assert.equal(sent.value.message.kind, "command");
+});

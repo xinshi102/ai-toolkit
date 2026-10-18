@@ -364,7 +364,7 @@ test("messages long-polls for a newer message and times out cleanly", async () =
   }, 700);
   const result = await pending;
   assert.ok(Date.now() - started >= 600, "should wait for the new message");
-  assert.ok(result.value.messages.some((row) => row.id > first.value.message.id));
+  assert.ok(result.value.messages.some((row) => row.goal === "g2"));
 
   const startedAt = Date.now();
   const timedOut = await bridge.messages("lp", { after: "zzz", wait: 1 });

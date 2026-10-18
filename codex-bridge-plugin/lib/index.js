@@ -430,7 +430,13 @@ export function createBridge({ root = DEFAULT_ROOT, now = () => new Date(), disp
     const wait = Math.min(30, Math.max(0, Number(options.wait) || 0));
     const deadline = Date.now() + wait * 1000;
     let result = await readMessages(sessionIdInput);
-    const hasNew = () => !after || (result.value.ok && result.value.messages.some((row) => row.id > after));
+    const hasNew = () => {
+      if (!after) return true;
+      if (!result.value.ok) return false;
+      const index = result.value.messages.findIndex((row) => row.id === after);
+      // 同秒内 id 的随机后缀不保证字典序，按「after 在已排序列表中的位置」判断是否还有更新的消息。
+      return index === -1 ? false : index < result.value.messages.length - 1;
+    };
     while (wait > 0 && result.value.ok && !hasNew() && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       result = await readMessages(sessionIdInput);

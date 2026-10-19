@@ -2,7 +2,7 @@
 name: xinshi
 description: 信使的任务入口：先判断环境与协作方式，单 harness 能做就自己做，需要时才用子 agent、跨 harness 或运行器；持续推进到必须由用户决定为止。
 metadata:
-  version: "3.0.0-trial.2"
+  version: "3.0.0-trial.3"
 ---
 
 # 信使
@@ -30,7 +30,7 @@ metadata:
 - 操作可能破坏当前宿主：升级 DSH 插件/版本、改宿主配置或技能安装——执行者不能是被改的宿主。
 - 需要宿主外的独立观察，且自测有结构性偏差风险（如写代码的人写验收测试）。
 - 本地已验证无进展，另一个宿主有明确优势。
-- 需要可恢复的长流程或多写入依赖：用 `runtime/workflow.py`（见 references/runtime.md）。
+- 需要可恢复的长流程或多写入依赖：用已安装的协作运行器（Windows 版本见 references/runtime.md）。
 
 原生子 agent 能覆盖的（含独立写测试）不升级。
 
@@ -49,8 +49,8 @@ metadata:
 
 ## 学习
 - 实施前先查：项目已有实现 → 知识库 → 成熟开源（核对许可与维护）。
-- 值得复用的写进项目 AGENTS.md（稳定约束）或 STATE.md（进度）；跨项目解法进 `E:/AI-Workspace/Knowledge/experience/`，个人笔记走 knowledge-vault，引用不复制。
+- 值得复用的写进项目 AGENTS.md（稳定约束）或 STATE.md（进度）；跨项目解法写入项目已配置的跨项目经验库，个人笔记走 knowledge-vault，引用不复制。
 - 用户纠正、返工、无谓提问、漏验、同类问题第二次：记一行到项目 `.work/xinshi/events.jsonl`；每 5 个完成任务最多一次汇总，产出 1–3 条候选改动，用户认可才改技能，无信号跳过。细则见 references/learning.md。
 
 ## 试行
-3.0.0-trial.2 已在 DSH 与 Codex CLI 验证技能发现；其他宿主先按默认方法执行，安装不等于生效。
+3.0.0-trial.3 是可移植发布引用更新；任务判断与授权规则沿用 trial.2。技能本身不限定操作系统；配套运行器本次仅发布 Windows 版本。目标宿主仍需验证技能发现，安装不等于生效。

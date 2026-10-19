@@ -24,7 +24,7 @@
 
 - 稳定约束与入口 → 项目 `AGENTS.md`
 - 当前进度与恢复动作 → `STATE.md`
-- 跨项目问题解法 → `E:/AI-Workspace/Knowledge/experience/`（索引见 `E:/AI-Workspace/Knowledge/README.md`）
+- 跨项目问题解法 → 用户已配置的跨项目经验库（位置由本机项目规则确定）
 - 个人笔记与私人知识 → Obsidian（`Knowledge-Vault`）与 knowledge-vault 技能
 
 互相引用，不复制全文。普通任务不强制写总结。

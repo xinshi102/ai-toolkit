@@ -2,7 +2,7 @@
 
 任务入口技能：接到任务先判断环境与协作方式（单对话 / 原生子 agent / 跨 harness / 运行器），把能推进的推进到「必须用户决定」，再停。
 
-- 版本：`3.0.0-trial.2`
+- 版本：`3.0.0-trial.3`
 - 正本：本目录 `skills/xinshi/`（自包含）
 - 依赖：无硬依赖。运行器、plan-map、knowledge-vault 都是可选的加速件，本机没有就跳过对应段落。
 
@@ -49,13 +49,13 @@ powershell -File scripts\install-xinshi.ps1 -Canonical <repo>\skills\xinshi -Roo
 
 ## 路径适配（重要）
 
-正文和 references 里有示例绝对路径（`E:/AI-Workspace/...`），那是作者本机的布局，换机器时按实际情况处理：
+路径以目标机器和项目配置为准，公开正文不绑定作者电脑布局：
 
 | 示例路径 | 换机器时 |
 |---|---|
 | 指针里的 canonical | 改成你本机真实存在的 `SKILL.md` 路径 |
-| `runtime/workflow.py` | 本机没有就跳过 [references/runtime.md](references/runtime.md) 对应段落 |
-| `E:/AI-Workspace/Knowledge/` | 换成本机知识库位置，或先不启用沉淀 |
+| 协作运行器 | 按 [references/runtime.md](references/runtime.md) 定位本机 Windows 组件，未安装就不声称可调用 |
+| 跨项目经验库 | 使用用户已有位置，未配置时先不启用沉淀 |
 | `.work/handoff/STATE.md` | 换成你项目的交接目录 |
 
 普通任务不需要这些依赖；只有确实存在运行器/知识库时才用。
@@ -77,5 +77,7 @@ cd ai-toolkit && git pull --ff-only
 | `references/runtime.md` | 什么时候用运行器（多写入、可恢复长流程） |
 | `references/learning.md` | 复用、信号、每 5 个任务汇总、沉淀去向 |
 | `agents/openai.yaml` | 界面显示名与隐式调用开关 |
+
+技能本身可供不同系统使用；配套[协作运行器本次为 Windows 版本](../../collaboration/windows/README.md)，需另行配置，不随复制技能自动部署。
 
 版本历史见仓库根 [CHANGELOG.md](../../CHANGELOG.md)。

@@ -1,0 +1,35 @@
+# Fixed single-invocation overlay: project file writing (workspace-write).
+# The adapter selects this file for permission=workspace-write. The audit
+# plugin reports real effective policy and tool events; it does not deny tools.
+- id: sandbox-policy
+  config:
+    mode: workspace-write
+    workspaceRoot: !!js process.cwd()
+- id: approval
+  config:
+    policy: never
+- id: tools
+  config:
+    mode: native
+- id: permission
+  config:
+    defaultPreset: workspace-write
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: never
+      workspace-write:
+        sandbox: workspace-write
+        approval: never
+      danger-full-access:
+        # Tighten the legacy name instead of widening a one-shot file task.
+        sandbox: workspace-write
+        approval: never
+- insert:
+    - id: runtime-dsh-workspace-audit
+      name: __XINSHI_PLUGIN_PATH__
+      inject: [sandboxPolicy, approval]
+- id: headless-runner
+  # Required injection: if the audit plugin is not loaded, the runner's service
+  # dependency cannot resolve and startup fails loudly.
+  inject: [headlessStartup, runtimeDshWorkspaceAudit]

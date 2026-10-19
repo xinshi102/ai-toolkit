@@ -197,6 +197,16 @@
       "path": "mcp/opencode-bridge",
       "origin": "personal",
       "status": "protocol source; requires live local bridge"
+    },
+    {
+      "name": "xinshi-collaboration-windows",
+      "kind": "runtime",
+      "path": "collaboration/windows",
+      "origin": "personal",
+      "platforms": [
+        "windows"
+      ],
+      "status": "Windows source release; target setup and native-client acceptance required"
     }
   ],
   "excluded": "Credentials, runtime state, private conversations/vaults, official unmodified skills, installed vendor plugins, binaries and screenshots"

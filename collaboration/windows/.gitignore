@@ -1,0 +1,10 @@
+.work/
+*.local.ps1
+*.local.json
+__pycache__/
+*.pyc
+*.sqlite*
+*.db
+*.log
+*.jsonl
+!runtime/tests/fixtures/*.ndjson

@@ -26,6 +26,7 @@
 | 监督Hermes执行 | [supervise-hermes](skills/supervise-hermes/SKILL.md) | 需本机隔离Worker，复制Skill不等于可调度 |
 | 持久计划与导图 | [Plan Map](plan-map/README.md) | DSH用插件版，Codex用Skill/MCP版；其他宿主先确认MCP与UI支持 |
 | DSH搜索、上下文、通知、管理 | [DSH插件清单](CAPABILITIES.md)与 `plugins/dsh/<组件>/` | 对应DSH版本和插件接口，密钥本机单独配置 |
+| 多线程任务依赖、持久队列与结果验收 | [xinshi 协作运行器（Windows 版）](collaboration/windows/README.md) | Windows、Python 3.10+，原生执行器另装；非全平台安装包 |
 | 多AI桥接 | [codex-bridge](plugins/dsh/codex-bridge/README.md)、[opencode-bridge MCP](mcp/opencode-bridge/README.md) | 可运行的本机桥服务与明确授权的会话 |
 | 工作区与产物治理 | [ai-workspace-manager](skills/ai-workspace-manager/SKILL.md)、[管理工具](tools/workspace-manager/README.md) | 为目标设备建立自己的目录与状态 |
 
@@ -75,7 +76,7 @@ Workspace管理工具当前按Mac工作区布局实现；其他系统先检查�
 
 ## 5. 已有同步脚本的适用范围
 
-[`sync/targets.json`](sync/targets.json)目前只登记原Mac的 `xinshi` 和 `knowledge-vault` 安装位置，不是全部28个组件的跨设备安装器。
+[`sync/targets.json`](sync/targets.json)目前只登记原Mac的 `xinshi` 和 `knowledge-vault` 安装位置，不是全部组件的跨设备安装器。
 
 [`scripts/sync-skills.sh`](scripts/sync-skills.sh)需要Bash、Python与相关命令，固定读取本机仓库副本的 `sync/targets.json`。运行前改为本机实际绝对路径，只登记准备管理的组件；脚本不展开 `~`，目标必须已存在。首次安装、依赖安装、插件部署与MCP注册需要分别完成。
 

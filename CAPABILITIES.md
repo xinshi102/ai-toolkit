@@ -28,6 +28,7 @@
 | hatch-pet | skill | [skills/hatch-pet](skills/hatch-pet) | personal adaptation; Apache-2.0 license retained | source snapshot |
 | daily-office-work | skill | [skills/daily-office-work](skills/daily-office-work) | personal | source snapshot |
 | xinshi | skill | [skills/xinshi](skills/xinshi) | personal | source snapshot |
+| xinshi-collaboration-windows | runtime | [collaboration/windows](collaboration/windows) | personal | **Windows 版**；配置后验证原生执行器 |
 | knowledge-vault | skill | [skills/knowledge-vault](skills/knowledge-vault) | personal | source snapshot |
 | ai-workspace-manager | skill | [skills/ai-workspace-manager](skills/ai-workspace-manager) | personal | source snapshot |
 | workspace-manager-tools | tools | [tools/workspace-manager](tools/workspace-manager) | personal | source; target setup required |

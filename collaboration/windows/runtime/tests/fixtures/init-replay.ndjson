@@ -1,0 +1,3 @@
+{"type": "system", "subtype": "init", "session_id": "synthetic-session", "tools": ["Read", "Write"], "mcp_servers": [], "__timestamp": "first"}
+{"type": "result", "subtype": "success", "session_id": "synthetic-session", "is_error": false, "permission_denials": [], "result": "{\"ok\":true}"}
+{"type": "system", "subtype": "init", "session_id": "synthetic-session", "tools": ["Read", "Write"], "mcp_servers": [], "__timestamp": "later"}

@@ -53,17 +53,7 @@ git rev-parse HEAD
 
 `xinshi`（信使；2.0 时叫 `xinshiimprove`）正文即 `SKILL.md` + `references/`，不再有 `share/` 共享库；各宿主的 `SKILL.md` 可以是指向正本的指针文件，不要用Codex入口整份覆盖DSH、Hermes或OpenCode入口。发现外部依赖缺失时先补齐或标记待适配，不宣称复制文件即可运行。
 
-新机器安装（指针方式，正文只维护一份）：
-
-```sh
-bash scripts/install-xinshi.sh "$PWD/skills/xinshi" ~/.codex/skills ~/.agents/skills ~/.dsh/skills
-```
-
-```powershell
-powershell -File scripts\install-xinshi.ps1 -Canonical <repo>\skills\xinshi -Roots C:\Users\<me>\.codex\skills,C:\Users\<me>\.agents\skills
-```
-
-脚本只写一个 5 行指针，遇到已存在的非指针目录会拒绝覆盖。安装后用宿主自己的技能列表确认 `xinshi` 出现；不同客户端的扫描目录不同，按本机实际根目录传参。
+安装、路径适配与更新步骤见 [skills/xinshi/README.md](skills/xinshi/README.md)（全量副本和指针两种方式，含安装后确认方法）。
 
 ### DSH 插件
 

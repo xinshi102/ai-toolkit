@@ -5,6 +5,7 @@
 - 跨模型默认走 Codex CLI；已实测 `codex exec` 会话内技能列表包含 `xinshi`。
 - 交接路径写成完整绝对路径：`Agent-Conventions/.work/handoff/STATE.md` + `inbox/`。
 - 新增 `scripts/install-xinshi.sh` / `install-xinshi.ps1`（5 行指针，不覆盖非指针目录）；Windows 临时目录试装通过。
+- 新增 `skills/xinshi/README.md`：安装（全量副本/指针）、路径适配、安装后确认与更新步骤；根 README 改为链接该说明。
 
 ## 2026-10-19 — xinshi 3.0.0-trial.1（改名 + 重构）
 

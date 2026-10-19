@@ -1,10 +1,18 @@
+## 2026-10-19 — xinshi 3.0.0-trial.1（改名 + 重构）
+
+- `xinshiimprove` 更名为 `xinshi`（信使）：正本目录、宿主入口指针、用户规则入口一并改名，旧名不再加载。
+- 正文压到约 50 行：任务判断（单对话 / 原生子 agent / 跨 harness / 运行器）、升级条件、监督者、验证、持续推进、学习。
+- 删除 `codex-runtime.md`、`windows-runtime.md`、`task-handoff.md`：有效内容并入 `references/coordination.md`，宿主差异按当前机器写。
+- 新增 `references/learning.md`（事件触发的自进化与沉淀）与 `references/runtime.md`（何时用 `runtime/workflow.py`）。
+- 合并 2.0.0-trial.4 的有效内容：环境判断三行模板、委派决策一行、验收证据表。
+- 运行器与仓库名不改；历史证据、备份和旧运行状态保留原路径。
+
 ## 2026-10-18 — xinshiimprove 2.0.0-trial.4 execution loop
 
 - 委派检查点（硬性）：非简单任务必须在计划/任务卡写「委派决策：派 N 个（谁、为什么）/ 不派（理由）」，收尾自检回答；防止主控独自做完。
 - 环境判断三行模板：任务类型 / 资源与缺口 / 组织方式。
 - 新增「验收证据」节：项目 / 结果 / 证据表格；子 agent 自报完成不算验收。
-- 交接文件落地：docs/templates/handoff-STATE.md、handoff-inbox.md、scripts/check-handoff.mjs；工作区已建 .work/handoff/STATE.md。
-- 试行范围：仍只做过 DSH 运行验收。
+- 交接文件：工作区已建 `.work/handoff/STATE.md` 与 `inbox/`。trial.4 提到的 `docs/templates/handoff-*.md`、`scripts/check-handoff.mjs` 在仓库和本机均不存在，3.0.0 只引用实际存在的路径。
 
 ## 2026-10-16 — xinshiimprove 2.0.0-trial.3 unified entry
 

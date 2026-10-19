@@ -1,23 +1,23 @@
 {
   "components": [
     {
-      "component": "xinshiimprove",
-      "canonical": "skills/xinshiimprove",
+      "component": "xinshi",
+      "canonical": "skills/xinshi",
       "targets": [
         {
           "name": "Codex",
           "kind": "full-copy",
-          "path": "/Users/xinshi/.codex/skills/xinshiimprove"
+          "path": "/Users/xinshi/.codex/skills/xinshi"
         },
         {
           "name": "DeepSeek Harness",
           "kind": "pointer",
-          "path": "/Users/xinshi/.dsh/skills/xinshiimprove"
+          "path": "/Users/xinshi/.dsh/skills/xinshi"
         },
         {
           "name": "OpenCode",
           "kind": "pointer",
-          "path": "/Users/xinshi/.config/opencode/skills/xinshiimprove"
+          "path": "/Users/xinshi/.config/opencode/skills/xinshi"
         }
       ],
       "habits": []

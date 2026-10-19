@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "snapshot_date": "2026-10-16",
+  "snapshot_date": "2026-10-19",
   "components": [
     {
       "name": "dsh-search-mcp",
@@ -164,9 +164,9 @@
       "status": "source snapshot"
     },
     {
-      "name": "xinshiimprove",
+      "name": "xinshi",
       "kind": "skill",
-      "path": "skills/xinshiimprove",
+      "path": "skills/xinshi",
       "origin": "personal",
       "status": "source snapshot"
     },

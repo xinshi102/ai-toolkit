@@ -18,7 +18,7 @@
 
 | 需求 | 优先查看 | 本机条件 |
 |---|---|---|
-| 通用协作、项目接手 | [xinshiimprove](skills/xinshiimprove/SKILL.md) | 保留宿主入口和项目规则 |
+| 通用协作、项目接手 | [xinshi（信使）](skills/xinshi/SKILL.md) | 保留宿主入口和项目规则 |
 | 小说规划、写作、审阅 | [novel-writing](skills/novel-writing/SKILL.md) | 有相应创作材料 |
 | 知识库与个人笔记 | [knowledge-vault](skills/knowledge-vault/SKILL.md)、[obsidian-knowledge-base](skills/obsidian-knowledge-base/SKILL.md)、[personal-note-capture](skills/personal-note-capture/SKILL.md) | 本机解析知识库位置，不从GitHub取得私人笔记 |
 | 日常报告、网页、表格 | [daily-office-work](skills/daily-office-work/SKILL.md) | 结合宿主已有文档/表格工具 |
@@ -51,7 +51,7 @@ git rev-parse HEAD
 
 阅读所选 `SKILL.md` 与必要引用。按当前宿主支持的目录安装整个组件，包括 `references/`、`scripts/`、`agents/`、`assets/` 等配套内容，不只复制正文。已有同名版本先备份和比较，保留用户修改、本机路径与宿主专用入口。
 
-`xinshiimprove` 2.0.0 起正文即 `SKILL.md` + `references/`，不再有 `share/` 共享库；各宿主的 `SKILL.md` 可以是指向正本的指针文件，不要用Codex入口整份覆盖DSH、Hermes或OpenCode入口。发现外部依赖缺失时先补齐或标记待适配，不宣称复制文件即可运行。
+`xinshi`（信使；2.0 时叫 `xinshiimprove`）正文即 `SKILL.md` + `references/`，不再有 `share/` 共享库；各宿主的 `SKILL.md` 可以是指向正本的指针文件，不要用Codex入口整份覆盖DSH、Hermes或OpenCode入口。发现外部依赖缺失时先补齐或标记待适配，不宣称复制文件即可运行。
 
 ### DSH 插件
 
@@ -73,14 +73,14 @@ Workspace管理工具当前按Mac工作区布局实现；其他系统先检查�
 
 ## 5. 已有同步脚本的适用范围
 
-[`sync/targets.json`](sync/targets.json)目前只登记原Mac的 `xinshiimprove` 和 `knowledge-vault` 安装位置，不是全部28个组件的跨设备安装器。
+[`sync/targets.json`](sync/targets.json)目前只登记原Mac的 `xinshi` 和 `knowledge-vault` 安装位置，不是全部28个组件的跨设备安装器。
 
 [`scripts/sync-skills.sh`](scripts/sync-skills.sh)需要Bash、Python与相关命令，固定读取本机仓库副本的 `sync/targets.json`。运行前改为本机实际绝对路径，只登记准备管理的组件；脚本不展开 `~`，目标必须已存在。首次安装、依赖安装、插件部署与MCP注册需要分别完成。
 
 ```sh
-bash scripts/sync-skills.sh --check --component xinshiimprove
+bash scripts/sync-skills.sh --check --component xinshi
 # 核对差异、目标和备份方案后，再执行更新：
-bash scripts/sync-skills.sh --apply --component xinshiimprove
+bash scripts/sync-skills.sh --apply --component xinshi
 ```
 
 `full-copy` 会备份后替换整个目标目录，有本机改动先合并；`pointer` 只核对宿主 `SKILL.md` 是否仍指向正本，不改正文。Windows没有合适Bash环境时，用本机工具执行同样的比较、备份、复制流程。详情见 [同步说明](sync/README.md)。

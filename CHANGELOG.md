@@ -1,3 +1,11 @@
+## 2026-10-19 — xinshi 3.0.0-trial.2（按用户反馈）
+
+- 自进化/沉淀频率：每 5 个完成任务汇总一次（原 10 个任务或每月）。
+- 跨项目知识沉淀落到 `E:\AI-Workspace\Knowledge`（projects / experience / patterns / inbox），个人笔记仍走 Obsidian 与 knowledge-vault。
+- 跨模型默认走 Codex CLI；已实测 `codex exec` 会话内技能列表包含 `xinshi`。
+- 交接路径写成完整绝对路径：`Agent-Conventions/.work/handoff/STATE.md` + `inbox/`。
+- 新增 `scripts/install-xinshi.sh` / `install-xinshi.ps1`（5 行指针，不覆盖非指针目录）；Windows 临时目录试装通过。
+
 ## 2026-10-19 — xinshi 3.0.0-trial.1（改名 + 重构）
 
 - `xinshiimprove` 更名为 `xinshi`（信使）：正本目录、宿主入口指针、用户规则入口一并改名，旧名不再加载。

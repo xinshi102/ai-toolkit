@@ -1,6 +1,6 @@
 # 协作运行边界
 
-版本：3.0.0-trial.1。仅在并行写入、多个执行对话或跨 harness 协作时读。
+版本：3.0.0-trial.2。仅在并行写入、多个执行对话或跨 harness 协作时读。
 
 ## 派发之前
 
@@ -22,7 +22,11 @@
 
 ## 跨 harness 交接
 
-共享进度用 `<项目>/.work/handoff/STATE.md`：交接前先读，完成后写 `inbox/<harness>-<时间>.md` 并在日志追加一条，不整份覆盖。
+共享进度固定放在完整路径 `E:/AI-Workspace/Projects/Shared/Agent-Conventions/.work/handoff/`：
+
+- 进度：`STATE.md`（交接前先读）
+- 结论：`inbox/<harness>-<时间>.md`，并在 STATE 的「交接日志」追加一条，不整份覆盖。
+
 文件存在只证明本地内容；对方确认回执才算接收。没有真实通道时说明缺口，不臆造桥接。
 
 ## 取消与恢复

@@ -15,6 +15,12 @@
 - DSH 插件 `node --test` 56/56 通过，含 `tool/ptc-dispatch` 事件折叠。
 - 范围未变：测试通过不等于目标设备已重连宿主；v8 内嵌实显、真实 `update_plan` 事件与自动维护端到端仍未验收。
 
+## 2026-10-19 xinshi 3.0.0-trial.2
+
+- DSH 技能目录显示 `xinshi`；Codex CLI（`codex exec`）会话内技能列表包含 `xinshi`（22 项，含 plan-map、knowledge-vault）。
+- CodeBuddy/WorkBuddy/Box/Kimi 的目录已改名并写入指针，但未做会话内加载确认。
+- 安装脚本：Windows 临时目录试装通过；bash 脚本只做 `bash -n` 语法检查，未在 macOS 实跑。
+
 ## 2026-10-19 xinshi 3.0.0-trial.1
 
 - 技能文件与入口指针改名完成；DSH 技能目录已热加载为 `xinshi`（旧名不再出现在目录里）。

@@ -1,3 +1,12 @@
+## 2026-10-20 — 事件门禁与预算熔断（token 控制）
+
+- 新增 `runtime/events.py`：SQLite 本地事件总线，追加式、零模型；事件消费与 `wait` 订阅。
+- 新增 `runtime/state.py`：任务权威状态文件与 <=4 KiB 快照裁剪；Plan 外置、带 `plan_hash`。
+- 新增 `runtime/gate.py`：确定性规则过滤（忽略/告警/命中）+ 冷却 + Gate 1/2/升级；每次只调用一次控制器，记录 verdict。
+- 新增 `runtime/budget.py`：按任务限制 token/时长/轮询次数，超限标 `blocked` 并发一次 `budget_exceeded`。
+- 新增 `COLLAB_EVENTS.md` 与 `WORKFLOWS.md` 集成说明；11 个离线单测覆盖事件、预算、门禁与快照。
+- 只加旁路模块，不改 `task_runner.py` / `workflow.py` 执行语义；发布版不包含作者本机路径和真实日志。
+
 ## 2026-10-19 — xinshi 3.0.0-trial.3 + 协作运行器 Windows 版
 
 - 技能引用改为仓库位置和用户本机配置，不携带作者工作区布局；协作和授权规则沿用 trial.2。

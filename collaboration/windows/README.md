@@ -67,3 +67,14 @@ python -B collaboration/windows/examples/offline_smoke.py
 Windows 任务进程树使用 owned Job：先挂起、分配、恢复；确认停止后才释放资源，无法确认时保留 unknown。资源锁只协调同一队列里的协作者，不是全局文件锁。CodeBuddy 的工具限制不是 OS 文件隔离，Bash 使用当前账号权限；主控必须保留任务授权与文件归属约束。
 
 本次不宣称支持 Linux/macOS，也不宣称安装即能接管 IDE 既有聊天、连接企业业务接口、在关闭桌面/重启后持续运行。SSH 属于单独配置的通道；本包没有内网主机、账号、端口或默认远端命令。特定项目的 Gate、生产写入及危险操作仍须遵循其已有授权。
+
+## 事件门禁与预算（token 控制）
+
+`runtime/` 新增四个旁路模块，不改变执行器语义：
+
+- `events.py`：SQLite 本地事件总线（零模型）；
+- `state.py`：任务权威状态与 <=4 KiB 快照；
+- `gate.py`：确定性规则过滤 + Gate 1/2/升级，每次只调用一次控制器；
+- `budget.py`：按任务限制 token/时长/轮询，超限熔断。
+
+使用方式与集成示例见 `runtime/COLLAB_EVENTS.md`。默认数据库 `.work/collab-events/collab.db` 属于本机运行状态，不提交。

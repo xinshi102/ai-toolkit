@@ -38,3 +38,24 @@ One workflow file owns one state directory and its queue, with a persistent proj
 Timeout bounds the current controller wait and validation time, and returns resumable state. A controller-budget timeout defers unfinished validation instead of falsely failing the business result. Existing worker attempts may continue; rerunning `run` collects them. This is not a registered service, OS-reboot recovery, nor proof of desktop-exit survival. Desktop-exit and OS-reboot survival require separate verification on the target machine.
 
 Validation: `python -B -m unittest discover -s runtime/tests -p test_workflow.py -v`. The 20 tests include real SQLite/runner parallel execution and automatic downstream file binding using the explicitly labelled deterministic local-test adapter, concurrent cancellation during validation, bounded validation timeout, project-root binding, and bounded state-lock waiting. State edits wait at most two seconds for transient lock contention; business exceptions are never retried. The controller's exclusive running lock still fails immediately on duplicate run. Actual model acceptance is recorded separately by the main controller.
+
+## Event gate and budget (token control)
+
+The runner stays the durable executor; the controller should not poll it. After each `run` returns, emit one event for the state transition and let the gate decide whether a model call is justified:
+
+```
+run -> accepted        => task_succeeded
+run -> failed          => task_failed
+run -> needs_attention => needs_decision
+node blocked/deviation => blocked / deviation
+```
+
+```powershell
+python -B runtime/events.py emit --task T1 --type task_succeeded --status accepted --payload '{"artifact":"out.json"}'
+python -B runtime/gate.py --db .work/collab-events/collab.db --state-dir .work/agent-state --once --dry-run
+```
+
+`gate.py` filters ignored/progress events locally, enforces a cooldown, builds a
+<=4 KiB snapshot from `.work/agent-state/<task>.json`, and makes at most one
+controller call (`--wake-cmd`). `budget.py` caps tokens, wall clock and polls per
+task. See `COLLAB_EVENTS.md` for the full contract and integration example.

@@ -9,6 +9,12 @@
 
 范围：源码、离线测试与隔离构建。不代表所有AI/目标设备已安装、真实GUI已重载或模型对话效果已验证。Master Plan草稿单独保留，不宣称可运行。
 
+## 2026-10-20 事件门禁与预算
+
+- `collaboration/windows/runtime` 新增 `events.py` / `state.py` / `gate.py` / `budget.py`；离线单测 `test_collab_events.py` 11/11 通过，完整 runtime 套件 95/95 通过。
+- CLI 冒烟：`events.py emit` -> `gate.py --once --dry-run` 产出 gate2 快照（<=4 KiB，payload 去除 stdout）-> `budget.py charge` 正常。
+- 未验收：真实控制器唤醒（未消耗额度）、跨机 broker、并行事件顺序压力；这些按需在目标机单独验证。
+
 ## 2026-10-15 Plan Map 0.6.0 / DSH 0.1.1
 
 - Codex 适配器本机 `node --test "acceptance/*.test.js"` 23/23 通过：存储与并发写入、真实 MCP 初始化与工具发现、内嵌视图、视口适配、计划解析、历史与宿主待办桥接。

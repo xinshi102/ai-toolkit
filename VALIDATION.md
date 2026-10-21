@@ -9,6 +9,12 @@
 
 范围：源码、离线测试与隔离构建。不代表所有AI/目标设备已安装、真实GUI已重载或模型对话效果已验证。Master Plan草稿单独保留，不宣称可运行。
 
+## 2026-10-21 本地 token 计量
+
+- `token_meter.py` 在本机 Codex 会话日志上实测：近 5h 50 次、6.46M input / 6.02M cached / 35.8k output，5h 22%、周 19%；与同一日志直接解析的数值一致。
+- `test_token_meter.py` 4/4 通过；完整 runtime 套件（含新测）待本轮重跑。
+- 边界：只读本地日志，不访问账号；百分比来自日志快照，token 数是本机记录，不做金额换算；CodeBuddy/WorkBuddy/DSH 尚未纳入。
+
 ## 2026-10-20 事件门禁与预算
 
 - `collaboration/windows/runtime` 新增 `events.py` / `state.py` / `gate.py` / `budget.py`；离线单测 `test_collab_events.py` 11/11 通过，完整 runtime 套件 95/95 通过。

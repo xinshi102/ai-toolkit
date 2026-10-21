@@ -1,3 +1,10 @@
+## 2026-10-21 — 本地 token 计量（Codex/GPT）
+
+- 新增 `runtime/token_meter.py`：读取 `~/.codex/sessions/**/rollout-*.jsonl` 的 `token_count`，输出每次调用、近 5 小时 / 今日 / 7 天、按会话与按小时的 input / cached / uncached / output / reasoning，以及日志里的 5h/周额度百分比。
+- 新增 `TOKEN_METER.md`：字段含义、缓存口径、与百分比的关系、边界（不读账号、不换算金额）。
+- 看板新增 `/api/usage` 与标题栏一行 token 计量；CLI 提供 `--json` / `--watch`。
+- 4 个离线单测覆盖解析、去重、total 差值回退与格式化。
+
 ## 2026-10-20 — 事件门禁与预算熔断（token 控制）
 
 - 新增 `runtime/events.py`：SQLite 本地事件总线，追加式、零模型；事件消费与 `wait` 订阅。

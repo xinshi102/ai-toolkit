@@ -7,6 +7,8 @@
 **给接手同步的 AI：先读本页，再读 [能力清单](CAPABILITIES.md) 或 [机器可读目录](capabilities.json)，最后只读选中组件的说明。不要默认安装全部内容。**
 
 > **2026-10-20 架构变更（事件门禁与预算）**：Windows 协作运行器新增 `events.py` / `state.py` / `gate.py` / `budget.py`，把“主控轮询执行器”改为“执行器发事件 → 本地确定性规则过滤 → 只在 Gate 1/2 或升级事件时唤醒主控一次”；另有每任务 token/时长/轮询熔断。设计、事件 schema、快照与集成示例见 [COLLAB_EVENTS.md](collaboration/windows/runtime/COLLAB_EVENTS.md)，提交 `210f53b`。执行器 `workflow.py` / `task_runner.py` 未改。
+>
+> **2026-10-21 新增本地 token 计量**：`runtime/token_meter.py` 读取 Codex 会话日志，显示每次调用与近 5h/今日/7d 的 input、cached、uncached、output、reasoning 及额度百分比；见 [TOKEN_METER.md](collaboration/windows/runtime/TOKEN_METER.md)。
 
 ## 1. 识别本机与任务
 

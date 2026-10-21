@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import tempfile
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 LOCAL = timezone(timedelta(hours=8))
 DEFAULT_ROOT = Path.home() / '.codex' / 'sessions'
+DEFAULT_CACHE = Path.home() / '.codex' / 'token_meter_cache.json'
 
 
 def _ts(value):
@@ -107,21 +109,65 @@ def parse_session(path: Path) -> dict:
     return {**meta, 'calls': calls}
 
 
-def scan(root=None, since=None) -> list[dict]:
+def _load_cache(path):
+    if not path:
+        return {}
+    try:
+        data = json.loads(Path(path).read_text(encoding='utf-8'))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_cache(path, cache):
+    if not path:
+        return
+    path = Path(path)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(prefix=path.name + '.', suffix='.tmp', dir=str(path.parent))
+        with open(fd, 'w', encoding='utf-8') as fh:
+            json.dump(cache, fh, ensure_ascii=False, separators=(',', ':'))
+        Path(tmp).replace(path)
+    except Exception:
+        pass
+
+
+def scan(root=None, since=None, cache_path=DEFAULT_CACHE) -> list[dict]:
     root = Path(root or DEFAULT_ROOT)
     if not root.exists():
         return []
+    cache = _load_cache(cache_path)
+    changed = False
+    seen = set()
     sessions = []
     for path in root.rglob('rollout-*.jsonl'):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        key = str(path.resolve())
+        seen.add(key)
         if since:
             try:
-                if datetime.fromtimestamp(path.stat().st_mtime, LOCAL) < since:
+                if datetime.fromtimestamp(stat.st_mtime, LOCAL) < since:
                     continue
-            except OSError:
-                continue
-        data = parse_session(path)
-        if data['calls']:
+            except Exception:
+                pass
+        entry = cache.get(key) or {}
+        if (entry.get('mtime') == stat.st_mtime and entry.get('size') == stat.st_size
+                and isinstance(entry.get('data'), dict)):
+            data = entry['data']
+        else:
+            data = parse_session(path)
+            cache[key] = {'mtime': stat.st_mtime, 'size': stat.st_size, 'data': data}
+            changed = True
+        if data.get('calls'):
             sessions.append(data)
+    if cache_path:
+        pruned = {k: v for k, v in cache.items() if k in seen}
+        if pruned != cache or changed:
+            _save_cache(cache_path, pruned)
     return sessions
 
 
@@ -250,10 +296,12 @@ def main():
     ap.add_argument('--days', type=int, default=7)
     ap.add_argument('--recent', type=int, default=20)
     ap.add_argument('--json', action='store_true')
+    ap.add_argument('--no-cache', action='store_true')
     ap.add_argument('--watch', type=float, default=0, help='refresh every N seconds')
     args = ap.parse_args()
     while True:
-        sessions = scan(args.root, since=_local_now() - timedelta(days=args.days + 1))
+        sessions = scan(args.root, since=_local_now() - timedelta(days=args.days + 1),
+                        cache_path=None if args.no_cache else DEFAULT_CACHE)
         data = summarize(sessions, days=args.days, recent=args.recent)
         print(json.dumps(data, ensure_ascii=False, indent=2) if args.json else text_report(data))
         if not args.watch:

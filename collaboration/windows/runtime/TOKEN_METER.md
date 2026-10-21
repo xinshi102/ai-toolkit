@@ -16,6 +16,9 @@ claim the plan's absolute token limit.
 - `session_meta` / `turn_context`: session id, cwd, model.
 - Duplicate token events with the same timestamp+total are ignored.
 - If `last_token_usage` is missing, the delta of `total_token_usage` is used.
+- Parsed sessions are cached in `~/.codex/token_meter_cache.json` keyed by file
+  mtime+size, so repeated scans only re-read changed files. Delete the cache or
+  pass `--no-cache` to force a full parse.
 
 ## CLI
 

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>协作看板</title>
+<script>try{const t=localStorage.getItem('board-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{--bg:#121212;--s1:#1a1a1a;--s2:#202020;--line:#262626;--tx:#ededed;--tx2:#a1a1a1;--dim:#6b6b6b;--faint:#2e2e2e;--att:#f5a524;--bad:#f2555a;--run:#ededed;color-scheme:dark}
+[data-theme=light]{--bg:#fafafa;--s1:#ffffff;--s2:#f4f4f4;--line:#ebebeb;--tx:#171717;--tx2:#4d4d4d;--dim:#8f8f8f;--faint:#e4e4e4;--att:#b86e00;--bad:#d1242f;--run:#171717;color-scheme:light}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font:15px/1.6 "Segoe UI","Microsoft YaHei UI","PingFang SC",sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+a{color:inherit}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--faint);border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+.app{height:100vh;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+main{padding:36px 56px 28px;display:flex;flex-direction:column;gap:30px;overflow:auto}
+aside{border-left:1px solid var(--line);padding:36px 30px 24px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--dim);font-size:13px;gap:12px}
+.top .r{display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);color:var(--tx2);border-radius:6px;padding:2px 10px;font-size:12px}
+.btn:hover{color:var(--tx);border-color:var(--dim)}
+.dd{position:relative}.dd-m{display:none;position:absolute;right:0;top:100%;padding-top:6px;z-index:20;width:340px}
+.dd:hover .dd-m,.dd:focus-within .dd-m{display:block}
+.dd-m>div{background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:4px;box-shadow:0 12px 32px rgba(0,0,0,.25)}
+.dd-m button{display:block;width:100%;padding:6px 10px;border-radius:6px;font-size:12.5px;color:var(--tx2)}
+.dd-m button:hover{background:var(--s2);color:var(--tx)}
+.dd-m small{display:block;color:var(--dim);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync{font-size:12px}.sync.bad{color:var(--bad)}
+.hero h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.02em;line-height:1.3}
+.hero p{margin:8px 0 0;color:var(--tx2);font-size:16px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--tx2);margin-right:14px;vertical-align:middle;transform:translateY(-3px)}
+.dot.att{background:var(--att);box-shadow:0 0 0 6px color-mix(in srgb,var(--att) 18%,transparent)}
+h2{margin:0 0 12px;font-size:12px;font-weight:500;color:var(--dim);letter-spacing:.08em}
+.asks{display:flex;flex-direction:column;gap:8px}
+.ask{display:block;width:100%;border:1px solid color-mix(in srgb,var(--att) 45%,var(--line));border-radius:10px;padding:14px 18px;background:color-mix(in srgb,var(--att) 6%,var(--s1))}
+.ask b{display:block;font-size:16px;font-weight:600}.ask span{color:var(--tx2);font-size:14px}
+.ask.old{border-color:var(--line);background:none;opacity:.55}
+.ask:hover{border-color:var(--att)}
+.note{color:var(--tx2);font-size:14px}.note b{color:var(--bad);font-weight:500}
+.run{display:flex;flex-direction:column;gap:14px}
+.grp .gh{display:grid;grid-template-columns:12px minmax(0,1fr);gap:4px 14px;align-items:baseline}
+.grp .gh i{width:7px;height:7px;border-radius:50%;background:var(--run);animation:b 2s infinite;align-self:center}
+.grp .gh b{font-size:16px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grp .gh span{grid-column:2;color:var(--dim);font-size:13px}
+.grp button{display:flex!important;justify-content:space-between;gap:14px;width:calc(100% + 16px);font-size:14px!important;color:var(--tx2);padding:3px 8px 3px 34px!important}
+.grp button .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.run button{display:grid;grid-template-columns:12px 110px minmax(0,1fr) auto;gap:14px;align-items:baseline;font-size:16px;padding:4px 8px;margin:0 -8px;border-radius:6px}
+.run button:hover,.task:hover{background:var(--s2)}
+.run i{width:7px;height:7px;border-radius:50%;background:var(--run);animation:b 2s infinite;align-self:center}
+@keyframes b{50%{opacity:.2}}
+.run .who{color:var(--tx2);font-size:14px}.run .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.run .d{color:var(--dim);font-size:13px}
+.empty{color:var(--dim);font-size:14px}
+.tasks{display:flex;flex-direction:column;gap:6px}
+.task{display:block;width:100%;padding:8px;margin:0 -8px;border-radius:8px}
+.task .h{display:flex;justify-content:space-between;gap:16px;font-size:16px}
+.task .h b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task .h em{font-style:normal;color:var(--dim);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.bar{height:2px;background:var(--faint);margin:8px 0 6px;border-radius:2px}.bar i{display:block;height:100%;background:var(--tx2);border-radius:2px}
+.task p{margin:0;color:var(--tx2);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task.stale{opacity:.5}
+.older{color:var(--dim);font-size:13px;padding:4px 0}
+.dots{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.dots button{width:10px;height:10px;border-radius:2px;background:var(--faint)}
+.dots button:hover{outline:2px solid var(--dim);outline-offset:1px}
+.dots .bad{background:var(--bad)}.dots .warn{background:color-mix(in srgb,var(--att) 55%,var(--faint))}.dots .run{background:var(--tx2);animation:b 2s infinite}
+.dsum{color:var(--dim);font-size:13px;margin-top:8px}
+.agh{display:flex;justify-content:space-between;align-items:center}
+.agh h2{margin:0}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}.seg button{padding:1px 9px;font-size:11.5px;color:var(--dim)}.seg button.on{background:var(--s2);color:var(--tx)}
+.ag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ag:last-child{border:0}
+.ag b{font-weight:500}.ag b small{color:var(--dim);font-size:12px;font-weight:400;margin-left:4px}
+.ag .v{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.01em}
+.ag .s{grid-column:1/-1;color:var(--dim);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag .q{grid-column:1/-1;height:2px;background:var(--faint);border-radius:2px;margin-top:6px}.ag .q i{display:block;height:100%;background:var(--tx2);border-radius:2px}
+.ag .q i.hot{background:var(--att)}
+.ag.off{opacity:.45}
+#veil{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:30;display:none}#veil.on{display:block}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(620px,94vw);background:var(--s1);border-left:1px solid var(--line);transform:translateX(102%);transition:transform .15s ease;z-index:31;display:flex;flex-direction:column}
+#drawer.on{transform:none}
+.dw-h{display:flex;gap:12px;align-items:flex-start;padding:22px 26px 12px}
+.dw-h h3{margin:0;font-size:19px;font-weight:600;flex:1;line-height:1.4;word-break:break-all}
+.dw-h h3 small{display:block;font-size:12px;color:var(--dim);font-weight:400;margin-top:2px}
+.dw-x{font-size:18px;color:var(--dim)}
+.dw-b{overflow:auto;padding:0 26px 28px;flex:1}
+.kv{display:grid;grid-template-columns:76px minmax(0,1fr);gap:6px 14px;font-size:14px;margin:6px 0 16px}
+.kv dt{color:var(--dim)}.kv dd{margin:0;word-break:break-all}
+.st-bad{color:var(--bad)}.st-warn{color:var(--att)}
+.reason{border-left:2px solid var(--bad);padding:2px 0 2px 12px;color:var(--tx2);font-size:14px;margin-bottom:14px;word-break:break-all}
+.lbl{font-size:12px;color:var(--dim);letter-spacing:.06em;margin:16px 0 6px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0;font:13px/1.65 "Cascadia Mono",Consolas,"Microsoft YaHei UI",monospace;color:var(--tx2);max-height:48vh;overflow:auto}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.links a,.links button{font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:1px 9px;color:var(--tx2);text-decoration:none}
+.links a:hover,.links button:hover{color:var(--tx);border-color:var(--dim)}
+.stg{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.stg i{width:8px;height:8px;border-radius:50%;background:var(--faint);margin-top:7px}
+.stg.done i{background:var(--tx2)}.stg.active i{background:var(--run);animation:b 2s infinite}.stg.blocked i{background:var(--bad)}
+.stg.done{color:var(--dim)}.stg em{font-style:normal;color:var(--dim);font-size:12.5px}
+.stg small{display:block;color:var(--dim);font-size:12.5px}
+@media(max-width:1100px){.app{grid-template-columns:1fr}aside{border-left:0;border-top:1px solid var(--line)}body{overflow:auto}.app{height:auto}main{overflow:visible}}
+</style></head>
+<body><div class="app">
+<main>
+  <div class="top"><span id="date"></span><span class="r">
+    <span class="sync" id="sync">加载中</span>
+    <span class="dd"><button class="btn">数据目录</button><span class="dd-m"><div id="srcMenu"></div></span></span>
+    <button class="btn" id="tg"></button></span></div>
+  <section class="hero" id="hero"><h1>加载中…</h1></section>
+  <section id="askBox"></section>
+  <section><h2>正在进行</h2><div class="run" id="run"></div></section>
+  <section><h2>任务</h2><div class="tasks" id="tasks"></div></section>
+  <section><h2>今天的执行</h2><div class="dots" id="dots"></div><div class="dsum" id="dsum"></div></section>
+</main>
+<aside><div class="agh"><h2>AI 资源</h2><span class="seg"><button data-days="1" class="on">今日</button><button data-days="7">7 天</button></span></div><div id="agents"></div></aside>
+</div>
+<div id="veil"></div>
+<aside id="drawer" aria-hidden="true"><div class="dw-h"><h3 id="dwT"></h3><button class="dw-x" id="dwX" title="关闭 (Esc)">✕</button></div><div class="dw-b" id="dwB"></div></aside>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const T=n=>{n=+n||0;return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(n>=1e8?0:1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(Math.round(n))};
+const clean=s=>String(s||'').replace(/\*\*|`/g,'').replace(/^\[(active|pending|done|blocked)\]\s*/i,'').replace(/^[a-z]+:\s*/i,'').trim();
+const cleanTitle=s=>String(s||'').replace(/[（(]\s*\d{4}-\d{2}-\d{2}\s*[)）]/g,'').replace(/[:：]?\s*接续状态.*$/,'').replace(/^更新/,'').trim();
+const now=()=>Date.now()/1000;
+const ago=s=>{const d=now()-s;return d<60?'刚刚':d<3600?Math.round(d/60)+' 分钟':d<86400?Math.round(d/3600)+' 小时':Math.round(d/86400)+' 天'};
+const hm=s=>{const d=new Date(s*1000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const mtag=m=>/deepseek/i.test(m)?'deepseek':/sonnet/i.test(m)?'sonnet':/opus/i.test(m)?'opus':(m||'');
+async function J(u,o){const r=await fetch(u,Object.assign({cache:'no-store'},o||{}));if(!r.ok)throw new Error(r.status);return r.json()}
+const S={days:1,agents:null,tasks:null,feed:null,ok:0,err:false};
+const STALE=3*86400,HIDE=7*86400;
+
+/* theme */
+const tg=$('tg');
+function setTheme(t){document.documentElement.dataset.theme=t;tg.textContent=t==='dark'?'浅色':'深色';try{localStorage.setItem('board-theme',t)}catch(e){}}
+setTheme(document.documentElement.dataset.theme||'dark');tg.onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+/* render */
+function asks(){
+  const out=[],t=S.tasks||{};
+  (t.states||[]).forEach(s=>(s.decisions||[]).forEach(x=>out.push({k:'dec',t:clean(x.title),s:cleanTitle(s.title)||s.task,src:x.source,body:x.body,old:false})));
+  (t.plans||[]).filter(p=>now()-p.mtime<HIDE).forEach(p=>(p.blocked||[]).forEach(b=>out.push({k:'blk',t:clean(b.title),s:p.title,note:b.note,plan:p.id,old:now()-p.mtime>STALE})));
+  return out;
+}
+function render(){
+  if(!S.tasks||!S.feed)return;
+  const A=asks(),fresh=A.filter(a=>!a.old),feed=S.feed.filter(r=>r.status!=='gone');
+  const running=feed.filter(r=>r.status==='run');
+  const d0=new Date();d0.setHours(0,0,0,0);const today=feed.filter(r=>r.mtime>=d0/1000);
+  const done=today.filter(r=>r.status==='ok'||r.status==='warn').length;
+  const fails=feed.filter(r=>r.status==='bad'&&now()-r.mtime<86400);
+  $('date').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'})+' · '+hm(now());
+  document.title=(fresh.length?`(${fresh.length}) `:'')+'协作看板';
+  $('askBox').innerHTML=(A.length?`<div class="asks">${A.map((a,i)=>`<button class="ask ${a.old?'old':''}" data-ask="${i}"><b>${esc(a.t)}</b><span>${esc(a.s)}${a.old?' · 超过 3 天未动，可能已不需要':''}</span></button>`).join('')}</div>`:'')+
+    (fails.length?`<p class="note" style="margin:${A.length?'12px':'0'} 0 0"><b>${fails.length} 次执行失败</b>（24 小时内）· 主控会先自行处理，同一原因失败两次才会找你 · 点下方红色方块查看</p>`:'');
+  S._asks=A;
+  const groups=[];running.forEach(r=>{const k=(r.controller||'')+'|'+(r.task||'');let g=groups.find(x=>x.k===k);if(!g)groups.push(g={k,c:r.controller,t:r.task||r.project||'未归类',items:[]});g.items.push(r)});
+  $('run').innerHTML=groups.length?groups.map(g=>{const ag=[...new Set(g.items.map(r=>r.agent))].join('、');
+    return `<div class="grp"><div class="gh"><i></i><b>${esc(g.t)}</b><span>${esc(g.c||'')} 主控 · ${g.items.length} 个包在跑（${esc(ag)}）</span></div>${g.items.map(r=>`<button data-dir="${esc(r.dir)}"><span class="t">${esc(r.title)}</span><span class="d">${esc(r.agent)} · ${ago(r.mtime)}</span></button>`).join('')}</div>`}).join(''):'<div class="empty">没有在跑的任务</div>';
+  S._groups=groups.length;
+  $('hero').innerHTML=fresh.length?`<h1><span class="dot att"></span>有 ${fresh.length} 件事需要你</h1><p>其余 ${S._groups||0} 个任务由 AI 在推进</p>`
+    :`<h1><span class="dot"></span>无需你处理</h1><p>${S._groups||0} 个任务在推进 · ${running.length} 个包在跑 · 今天已完成 ${done} 个工作包</p>`;
+  const items=[...(S.tasks.plans||[]).map(p=>({k:'plan',id:p.id,m:p.mtime,t:p.title,pct:p.total?p.done/p.total:null,num:`${p.done}/${p.total}`,now:clean((p.current[0]||{}).title||((p.stages.find(s=>s.status==='active')||{}).title)||'')})),
+    ...(S.tasks.states||[]).map(s=>({k:'state',id:s.path,m:s.mtime,t:cleanTitle(s.title)||s.task,pct:null,num:s.project,now:clean(s.next[0]||s.current[0]||'')}))].sort((a,b)=>b.m-a.m);
+  const fr=items.filter(x=>now()-x.m<STALE),old=items.filter(x=>now()-x.m>=STALE);
+  const card=x=>`<button class="task ${now()-x.m>=STALE?'stale':''}" data-${x.k}="${esc(x.id)}"><div class="h"><b>${esc(x.t)}</b><em>${esc(x.num)}</em></div>${x.pct!=null?`<div class="bar"><i style="width:${x.pct*100}%"></i></div>`:'<div style="height:6px"></div>'}<p>${esc(x.now)}</p></button>`;
+  $('tasks').innerHTML=(fr.map(card).join('')||'<div class="empty">近 3 天没有进行中的任务</div>')+(old.length?`<details><summary class="older">较早的任务 ${old.length} 个</summary>${old.map(card).join('')}</details>`:'');
+  $('dots').innerHTML=today.slice().reverse().map(r=>`<button class="${r.status}" data-dir="${esc(r.dir)}" title="${esc(r.title)} · ${hm(r.mtime)}"></button>`).join('');
+  const nb=today.filter(r=>r.status==='bad').length;
+  $('dsum').textContent=today.length?`${today.length} 个工作包${nb?` · ${nb} 个失败（红色）`:' · 没有失败'} · 点方块看详情`:'今天还没有执行记录';
+}
+const AN={'Codex / GPT':['GPT','主控'],ExecA:['ExecA','执行'],ExecB:['ExecB','执行'],DSH:['DSH','执行'],Cursor:['Cursor','执行'],HostC:['HostC','分析']};
+function renderAgents(){
+  if(!S.agents)return;
+  $('agents').innerHTML=(S.agents.agents||[]).map(a=>{const [n,r]=AN[a.agent]||[a.agent,''];let v,s,q=null,on=true;
+    if(a.agent==='Codex / GPT'){q=a.quota&&a.quota.primary;v=q!=null?q+'%':T(a.input);s=q!=null?`5 小时额度 · 周 ${a.quota.secondary??'?'}%`:`输入 token · ${a.calls} 次`;on=q!=null||a.calls>0}
+    else if(a.agent==='ExecB'){v=(a.credits??0)+' 分';s=`${a.requests||0} 次计费 · ${a.sessions} 会话`;on=a.sessions>0}
+    else if(a.agent==='Cursor'||a.agent==='HostC'){v=a.sessions+' 会话';s=`${a.calls} 条 · 本地不记录 token`;on=a.sessions>0}
+    else{v=T(a.input);s=`输入 token · ${a.calls} 次`;on=a.calls>0}
+    return `<div class="ag ${on?'':'off'}" title="${esc(a.note||'')}"><b>${n}<small>${r}</small></b><span class="v">${esc(v)}</span><span class="s">${esc(s)}</span>${q!=null?`<div class="q"><i class="${q>80?'hot':''}" style="width:${q}%"></i></div>`:''}</div>`}).join('');
+}
+function renderSync(){const e=$('sync');e.className='sync'+(S.err?' bad':'');e.textContent=S.err?'刷新失败，重试中':S.ok?'已同步 '+hm(S.ok):'加载中'}
+
+/* drawer */
+const dw=$('drawer'),veil=$('veil');
+function openDw(title,sub,html){$('dwT').innerHTML=esc(title)+(sub?`<small>${esc(sub)}</small>`:'');$('dwB').innerHTML=html;dw.classList.add('on');veil.classList.add('on');dw.setAttribute('aria-hidden','false')}
+function closeDw(){dw.classList.remove('on');veil.classList.remove('on');dw.setAttribute('aria-hidden','true')}
+const ST={ok:'完成',warn:'完成（过程中有告警）',bad:'失败',run:'运行中',idle:'中断',gone:'已被后续接替'};
+async function showRun(dir){
+  const f=(S.feed||[]).find(r=>r.dir===dir);
+  openDw(f?f.title:'加载中…',f?f.raw:'',f?`<dl class="kv"><dt>状态</dt><dd class="st-${f.status}">${ST[f.status]||f.label}</dd><dt>执行者</dt><dd>${esc(f.agent)}</dd><dt>结果</dt><dd>${esc(clean(f.summary))}</dd></dl><p class="empty">正在读取回复…</p>`:'');
+  try{const d=await J('/api/detail?dir='+encodeURIComponent(dir));
+    openDw(d.title,d.raw,`<dl class="kv"><dt>状态</dt><dd class="st-${d.status}">${ST[d.status]||d.label}</dd><dt>执行者</dt><dd>${esc(d.agent)}${d.model?' · '+esc(mtag(d.model)):''}</dd>
+      <dt>时间</dt><dd>${esc(d.time)}</dd><dt>规模</dt><dd>${d.turns||0} 轮 · 续跑 ${Math.max(0,(d.attempts||1)-1)} 次 · 输入 ${T(d.tokens_in)} / 输出 ${T(d.tokens_out)}</dd>
+      ${d.continuation_of?`<dt>接续自</dt><dd>${esc(d.continuation_of)}</dd>`:''}</dl>
+      ${d.reason&&d.status!=='ok'?`<div class="reason">${esc(d.reason)}</div>`:''}
+      <div class="lbl">执行者的回复</div><pre>${esc(d.reply||'（还没有回复）')}</pre>
+      <details><summary class="lbl" style="cursor:pointer">任务说明（${d.prompt.length} 字）</summary><pre>${esc(d.prompt)}</pre></details>
+      <div class="links">${d.files.map(f=>`<a target="_blank" href="/file?path=${encodeURIComponent(d.dir+'/'+f)}">${esc(f)}</a>`).join('')}<button data-open="${esc(d.dir)}">打开文件夹</button></div>`)}
+  catch(e){openDw('读取失败','',`<p class="empty">${esc(e.message)}</p>`)}
+}
+function showPlan(id){
+  const p=(S.tasks.plans||[]).find(x=>x.id===id);if(!p)return;
+  openDw(p.title,`Plan Map · ${p.done}/${p.total} · ${ago(p.mtime)}前更新`,
+    `${(p.current||[]).length?`<div class="lbl">正在做</div>${p.current.map(c=>`<div class="stg active"><i></i><span>${esc(clean(c.title))}${c.note?`<small>${esc(clean(c.note))}</small>`:''}</span><em></em></div>`).join('')}`:''}
+     <div class="lbl">阶段</div>${p.stages.map(s=>`<div class="stg ${s.status}"><i></i><span>${esc(clean(s.title))}${s.note&&s.status!=='done'?`<small>${esc(clean(s.note))}</small>`:''}</span><em>${s.total?s.done+'/'+s.total:''}</em></div>`).join('')}`);
+}
+function showState(path){
+  const s=(S.tasks.states||[]).find(x=>x.path===path);if(!s)return;
+  const li=a=>a.map(x=>`<div class="stg"><i></i><span>${esc(clean(x))}</span><em></em></div>`).join('');
+  openDw(cleanTitle(s.title)||s.task,`${s.project} / ${s.task} · ${ago(s.mtime)}前更新`,
+    `${s.current.length?`<div class="lbl">现状</div>${li(s.current)}`:''}${s.next.length?`<div class="lbl">下一步</div>${li(s.next)}`:''}${s.pending.length?`<div class="lbl">挂起项</div>${li(s.pending)}`:''}
+     <div class="lbl">里程碑笔记</div><div class="links"><a target="_blank" href="/note?path=${encodeURIComponent(s.path)}">STATE.md</a>${(s.journal||[]).map(j=>`<a target="_blank" href="/note?path=${encodeURIComponent(j.path)}">${esc(j.name)} · ${esc(j.time)}</a>`).join('')}
+     <button data-open="${esc(s.path.replace(/[\\/][^\\/]+$/,''))}">打开文件夹</button></div>`);
+}
+function showAsk(i){
+  const a=(S._asks||[])[i];if(!a)return;
+  if(a.k==='dec')openDw('需要你决定',a.s,`<pre>${esc(a.body)}</pre><div class="links"><a target="_blank" href="/note?path=${encodeURIComponent(a.src)}">打开来源</a></div>`);
+  else showPlan(a.plan);
+}
+async function openFolder(p){try{await J('/api/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p})})}catch(e){}}
+document.addEventListener('click',e=>{
+  const o=e.target.closest('[data-open]');if(o){e.preventDefault();openFolder(o.dataset.open);return}
+  const q=e.target.closest('[data-ask]');if(q){showAsk(+q.dataset.ask);return}
+  const p=e.target.closest('[data-plan]');if(p){showPlan(p.dataset.plan);return}
+  const s=e.target.closest('[data-state]');if(s){showState(s.dataset.state);return}
+  const d=e.target.closest('[data-dir]');if(d){showRun(d.dataset.dir);return}
+  const g=e.target.closest('[data-days]');if(g){S.days=+g.dataset.days;document.querySelectorAll('[data-days]').forEach(x=>x.classList.toggle('on',x===g));loadAgents();return}
+  if(e.target===veil||e.target.closest('#dwX'))closeDw();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDw()});
+
+/* data */
+async function loadMain(){try{const [t,f]=await Promise.all([J('/api/tasks'),J('/api/feed')]);S.tasks=t;S.feed=f.items||[];S.err=false;S.ok=now();render()}catch(e){S.err=true}renderSync()}
+async function loadAgents(){try{S.agents=await J('/api/agents?days='+S.days);renderAgents()}catch(e){}}
+async function loadMeta(){try{const m=await J('/api/meta');$('srcMenu').innerHTML=m.sources.map(s=>`<button data-open="${esc(s.path)}">${esc(s.label)}<small>${esc(s.path)}</small></button>`).join('')}catch(e){}}
+loadMain();loadAgents();loadMeta();
+setInterval(()=>{if(!document.hidden)loadMain()},10000);
+setInterval(()=>{if(!document.hidden)loadAgents()},30000);
+setInterval(()=>{renderSync();if(S.tasks)render()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadMain();loadAgents()}});
+})();
+</script></body></html>

@@ -1,3 +1,9 @@
+## 2026-10-27 — xinshi 3.1.4 + 协作看板（静）
+
+- `skills/xinshi` 升到 3.1.4：正文精简；执行者默认用便宜模型；秘书模式（里程碑自验通过后直接继续，只在需要用户决定时停）；新增 `references/pitfalls.md`，按场景整理踩过的坑，包括部署、自动停止机制、宿主/技能升级、界面类任务、Windows 写文件、跨渠道成本。
+- 新增 `collaboration/windows/dashboard/`：本地只读协作看板。布局按“有没有事找我 → 任务进度 → AI 用量”排序；视觉以灰阶为主，只用一种强调色；深色/浅色可切换；「正在进行」按任务归组；点开有详情抽屉。设计依据是 Calm Technology、Linear、Vercel Geist、Grafana 等资料的调研结论。
+- 公开版中，私有执行渠道和宿主用 `ExecA` / `ExecB` / `HostC` 占位，本机数据配置只提供空模板；工作区根目录通过 `XINSHI_WORKSPACE` 指定。
+
 ## 2026-10-21 — 本地 token 计量（Codex/GPT）
 
 - 新增 `runtime/token_meter.py`：读取 `~/.codex/sessions/**/rollout-*.jsonl` 的 `token_count`，输出每次调用、近 5 小时 / 今日 / 7 天、按会话与按小时的 input / cached / uncached / output / reasoning，以及日志里的 5h/周额度百分比。

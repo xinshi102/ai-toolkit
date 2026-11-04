@@ -1,0 +1,14 @@
+# xinshi-ledger bundle patch：只插入主机行（没有客户端半区）。
+# 台账默认就是 skill 里的那份：$DSH_HOME/skills/xinshiimprove/share/observations.md
+- insert:
+    - id: xinshi-ledger
+      name: '@local/dsh-xinshi-ledger'
+      config:
+        # 默认层级：决定闸 0 门槛（L0/L1 需 3 次、L2 需 2 次、L3~L5 需 1 次）；单次调用可用 level 覆盖
+        level: L2
+        # 覆盖前留一份 observations.md.bak（台账是证据，写坏一次就全丢）
+        backup: true
+        # 其余旋钮用默认值即可，列在这里只是让部署方知道存在：
+        # dir: ''    # 默认 $DSH_HOME/skills/xinshiimprove/share
+        # file: ''   # 默认 <dir>/observations.md；给了 file 就优先用它
+        # section: ''  # 系统提示段（默认两行；改规则前先看闸 0）

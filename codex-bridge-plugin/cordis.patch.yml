@@ -1,0 +1,7 @@
+- insert:
+    - id: codex-bridge
+      name: '@local/dsh-codex-bridge'
+      config:
+        root: /Users/xinshi/Documents/deepseek/codex-collab
+        appPath: /Users/xinshi/Applications/DeepSeek-Codex 协作窗口.app
+        harnessAppPath: /Applications/DeepSeek Harness.app

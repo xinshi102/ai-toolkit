@@ -1,0 +1,13 @@
+﻿{
+  "task_id": "login-page-redesign",
+  "adapter": "dsh-workspace",
+  "permission": "workspace-write",
+  "cwd": "D:/projects/my-app",
+  "prompt": "目标：把登录页改成新设计稿（docs/login-v2.png），支持记住我和错误提示。\n非目标：不改后端接口，不动注册页。\n权限边界：只改 src/pages/login/ 和对应测试；不安装新依赖。\n验收标准：npm test 全部通过；给出改动前后截图；写 journal/login-v2.md（做了什么、为什么、涉及的技术点一两句解释、证据路径）。\n交付位置：截图放 .work/login-v2/，最后回复列出改动文件和测试输出。",
+  "acceptance": {
+    "level": "L1",
+    "checks": ["npm test 通过", "有改动前后截图", "journal/login-v2.md 已写"]
+  },
+  "timeout_seconds": 7200,
+  "work_package": true
+}

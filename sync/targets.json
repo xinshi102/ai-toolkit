@@ -1,0 +1,53 @@
+{
+  "components": [
+    {
+      "component": "xinshi",
+      "canonical": "skills/xinshi",
+      "targets": [
+        {
+          "name": "Codex",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.codex/skills/xinshi"
+        },
+        {
+          "name": "DeepSeek Harness",
+          "kind": "pointer",
+          "path": "/Users/xinshi/.dsh/skills/xinshi"
+        },
+        {
+          "name": "OpenCode",
+          "kind": "pointer",
+          "path": "/Users/xinshi/.config/opencode/skills/xinshi"
+        }
+      ],
+      "habits": []
+    },
+    {
+      "component": "knowledge-vault",
+      "canonical": "skills/knowledge-vault",
+      "targets": [
+        {
+          "name": "Codex",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.codex/skills/knowledge-vault"
+        },
+        {
+          "name": "DeepSeek Harness",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.dsh/skills/knowledge-vault"
+        },
+        {
+          "name": "OpenCode",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.config/opencode/skills/knowledge-vault"
+        },
+        {
+          "name": "Hermes",
+          "kind": "full-copy",
+          "path": "/Users/xinshi/.hermes/skills/note-taking/knowledge-vault"
+        }
+      ],
+      "habits": []
+    }
+  ]
+}

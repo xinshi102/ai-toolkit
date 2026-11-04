@@ -1,0 +1,30 @@
+{
+  "name": "@local/dsh-codex-bridge",
+  "version": "1.5.1",
+  "private": true,
+  "description": "Explicitly authorized, file-backed Codex collaboration bridge for DeepSeek Harness",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "immediately": false
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

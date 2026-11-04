@@ -1,0 +1,22 @@
+{
+  "name": "@local/dsh-ui-macos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "macOS desktop-app chrome for the DeepSeek Harness web GUI: traffic-light title bar + native styling (client plugin).",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "immediately": true
+    }
+  },
+  "files": [
+    "lib"
+  ]
+}

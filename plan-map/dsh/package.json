@@ -1,0 +1,32 @@
+{
+  "name": "@local/dsh-plan-map",
+  "version": "0.1.1",
+  "private": true,
+  "description": "DSH 工程思维链路可视化：plan_node 工具维护计划树，右侧边栏思维导图实时渲染总览与分支",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./layout": "./lib/layout.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "slots"
+      ],
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

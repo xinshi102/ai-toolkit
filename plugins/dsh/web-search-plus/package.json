@@ -1,0 +1,26 @@
+{
+  "name": "@local/dsh-web-search-plus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DSH 联网读取增强（L1）：web_read 只返回正文、按 token 预算裁剪、同 URL 本地缓存",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./extract": "./lib/extract.js",
+    "./budget": "./lib/budget.js",
+    "./cache": "./lib/cache.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

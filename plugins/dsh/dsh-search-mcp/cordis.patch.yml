@@ -1,0 +1,39 @@
+# dsh-search-mcp（dshworkspace 适配版）：把模型侧 web_search 的执行换成 MCP 搜索后端。
+#
+# 与上游的差异（都在 NOTICE.md 里记了）：
+#   1) host 依赖 pin 到本机宿主 0.1.5-rc.2；schemastery 3.18.2；不再依赖 dsh-web（见 lib/web-error.js）
+#   2) **不** disabled 内置 web-search-deepseek：只把 web.searchProvider 指到 search-mcp。
+#      想切回内置 DeepSeek 搜索，把下面 searchProvider 改回 deepseek-official（或删掉那两行）即可。
+#   3) tool-web 保持 fetch: true —— 上游会顺手把 web_fetch 关掉，那会让 web_fetch / web_read 一起失效。
+#   4) 默认 server 用 DuckDuckGo（免 key，npx 起 stdio MCP）；要稳定结果换成 tavily/brave/exa/perplexity 并配 key。
+
+- insert:
+    - id: search-mcp
+      name: 'dsh-search-mcp'
+      config:
+        defaultServer: duckduckgo
+        maxResults: 8
+        searchTimeoutMs: 30000
+        servers:
+          - id: duckduckgo
+            kind: duckduckgo
+            maxResults: 8
+          # 有 key 就换成下面这种（key 走 $DSH_HOME/.credentials.yaml 或设置页）：
+          # - id: tavily
+          #   kind: tavily
+          #   apiKeyEnv: TAVILY_API_KEY
+
+- id: web
+  config:
+    # 默认**保持内置搜索**（deepseek-official）：provider 已经注册好，但不抢班。
+    # 注意 dsh-web 的选择规则：没有显式 id 且有多个可用 provider 时会报 WEB_PROVIDER_AMBIGUOUS，
+    # 所以这里必须显式写一个 id。配好 key / 选定 provider 之后，把下面这行改成 search-mcp 再重启即可启用。
+    searchProvider: deepseek-official
+
+- id: tool-web
+  disabled: false
+  config:
+    fetch: true
+    searchTimeoutMs: 60000
+    searchMaxResults: 50
+    searchMaxQueries: 4

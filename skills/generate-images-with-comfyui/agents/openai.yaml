@@ -1,0 +1,4 @@
+interface:
+  display_name: "本地 ComfyUI 生图"
+  short_description: "调用本机 ComfyUI 生成、批量变体并由 Codex 看图验收"
+  default_prompt: "使用 $generate-images-with-comfyui 在本机生成项目所需图片，并展示通过验收的结果。"

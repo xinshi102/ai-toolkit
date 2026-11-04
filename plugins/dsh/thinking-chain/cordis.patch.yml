@@ -1,0 +1,14 @@
+# thinking-chain bundle patch：插入主机行 + 客户端由 dsh.client 声明扫描。
+- insert:
+    - id: thinking-chain
+      name: '@local/dsh-thinking-chain'
+      config:
+        # 部署侧提示词段（进入系统提示，order 460，在 plan:policy 之前）。保持简短——
+        # 这段每个请求都会计费。
+        section: |-
+          工程思考链（thinking-chain）：
+          - 阶段：plan（拆解目标）→ act（最小动作）→ verify（验证结果）→ done（收尾确认）。
+          - 开始或切换阶段时调用 chain_note 记录 phase 与一行要点。
+          - 连续多步未记录会被提醒；链路记录在会话日志中，压缩后仍可追溯。
+        # 连续多少步未记录就注入一次提醒（0 = 关闭提醒）
+        staleAfterSteps: 3

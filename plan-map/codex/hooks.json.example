@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^mcp__plan[-_]map__plan_(view|import)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PLAN_MAP_HOME=$HOME/.codex/plan-map node /absolute/path/to/plan-map/codex/maintenance-hook.js"
+          }
+        ]
+      }
+    ]
+  }
+}

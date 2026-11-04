@@ -1,0 +1,23 @@
+{
+  "name": "@local/dsh-gpt-consult",
+  "version": "0.1.1",
+  "private": true,
+  "description": "DSH × GPT 协作：consult_gpt 工具 + /gpt 命令，OpenAI 兼容端点，与 codex-bridge 互补",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ]
+}

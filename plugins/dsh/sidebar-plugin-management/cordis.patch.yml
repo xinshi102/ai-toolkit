@@ -1,0 +1,3 @@
+- insert:
+    - id: sidebar-plugin-management
+      name: '@local/dsh-sidebar-plugin-management'

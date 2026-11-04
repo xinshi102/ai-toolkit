@@ -1,0 +1,12 @@
+# session-guard bundle patch：主机行 + 默认配置。
+- insert:
+    - id: session-guard
+      name: '@local/dsh-session-guard'
+      config:
+        # true（默认）= 未知事件类型直接抛错阻止写入（fail-closed）；
+        # false = 只写告警日志，不阻断（排查兼容性时用）。
+        enforce: true
+        # 可选：显式指定宿主 app 目录（默认自动探测**正在运行的这个宿主**：
+        # DSH_DESKTOP_APP → process.resourcesPath 下的 app.asar/dsh → app.asar → app）。
+        # 官方桌面版：'/Applications/DeepSeek Harness.app/Contents/Resources/app.asar/dsh'
+        # appDir: '/Applications/DeepSeek Harness.app/Contents/Resources/app.asar/dsh'

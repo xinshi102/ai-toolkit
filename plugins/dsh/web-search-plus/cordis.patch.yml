@@ -1,0 +1,16 @@
+# web-search-plus bundle patch：只插入主机行（L1 没有客户端半区）。
+# 说明：L1 只**新增** web_read 工具，不改内置 web_search / web_fetch 的注册与行为。
+- insert:
+    - id: web-search-plus
+      name: '@local/dsh-web-search-plus'
+      config:
+        # 单次 web_read 的默认 token 预算（被调用参数 maxTokens/maxChars 覆盖）
+        maxTokens: 1200
+        # 其余旋钮用默认值即可，列在这里只是让部署方知道存在：
+        # maxChars: 0          # >0 时硬性字符预算，优先于 maxTokens
+        # ttlMs: 604800000     # 缓存有效期（7 天）；0 = 不过期
+        # maxEntries: 200      # 缓存条目上限（LRU）
+        # cacheMaxChars: 2000000
+        # timeoutMs: 30000     # 交给 dsh-tool-call-timeout-policy 强制
+        # maxInputChars: 400000
+        # cacheFile: ''        # 默认 $DSH_HOME/storages/web-search-plus/cache.json

@@ -1,0 +1,15 @@
+# plan-map bundle patch：主机行 + 默认配置。
+- insert:
+    - id: plan-map
+      name: '@local/dsh-plan-map'
+      config:
+        # 计划树最大节点数（防失控）
+        maxNodes: 200
+        # 批准计划时，正文进根节点备注的最大字符数（0 = 不存）
+        planNoteChars: 600
+        # 是否把官方 todo 列表额外画成一个「任务清单」子树。
+        # 默认 false：todo 只用来**自动推进**同名节点的状态，不占计划树版面。
+        includeTodos: false
+        # 是否给模型一段「登记计划 / 推进状态」的提示（false = 不注入）
+        guidance: true
+        # 也可用 section 覆盖那段提示文本

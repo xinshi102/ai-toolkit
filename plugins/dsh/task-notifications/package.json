@@ -1,0 +1,23 @@
+{
+  "name": "@local/dsh-task-notifications",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Mac 任务完成、失败与待处理通知，含权限状态和开关",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ],
+  "scripts": {
+    "test": "node --test"
+  }
+}

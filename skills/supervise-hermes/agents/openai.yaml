@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hermes / DeepSeek 监工"
+  short_description: "委派 Hermes 或 DeepSeek 执行，并由 Codex 监督验收"
+  default_prompt: "使用 $supervise-hermes 选择合适的 Hermes/DeepSeek 执行通道，由 Codex 规划、监督、测试并验收。"

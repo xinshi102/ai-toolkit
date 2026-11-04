@@ -1,0 +1,27 @@
+﻿{
+  "id": "demo-flow",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "api",
+      "owner": "DSH",
+      "provider": "dsh-workspace",
+      "prompt": "实现 src/api/report.py 的导出接口，补单元测试 tests/test_report.py，结果写 out/api.json（包含 files 和 tests 两个字段）。",
+      "depends_on": [],
+      "write_paths": ["src/api", "tests/test_report.py", "out/api.json"],
+      "checks": [
+        {"kind": "file_json_keys", "path": "out/api.json", "keys": ["files", "tests"]},
+        {"kind": "python_unittest", "module": "tests.test_report", "cwd": ".", "timeout_seconds": 120}
+      ]
+    },
+    {
+      "id": "docs",
+      "owner": "Codex",
+      "provider": "codex-workspace",
+      "prompt": "根据上一步结果 {{result:api}} 更新 docs/report.md 的接口说明。",
+      "depends_on": ["api"],
+      "write_paths": ["docs/report.md"],
+      "checks": [{"kind": "file_contains", "path": "docs/report.md", "contains": "导出接口"}]
+    }
+  ]
+}

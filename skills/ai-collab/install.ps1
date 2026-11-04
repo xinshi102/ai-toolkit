@@ -7,7 +7,7 @@ Get-ChildItem (Join-Path $Here 'runtime') -Filter '*.patch.yml' | ForEach-Object
   $t = [IO.File]::ReadAllText($_.FullName)
   if ($t.Contains('__AI_COLLAB_RUNTIME__')) { [IO.File]::WriteAllText($_.FullName, $t.Replace('__AI_COLLAB_RUNTIME__', $Runtime), (New-Object Text.UTF8Encoding $false)) }
 }
-New-Item -ItemType Directory -Force (Join-Path $Here 'outputs'), (Join-Path $Here '.work'), (Join-Path $HOME '.ai-collab\plan-map') | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $Here 'outputs'), (Join-Path $Here '.work'), (Join-Path $Here '.work\runtime-tests'), (Join-Path $HOME '.ai-collab\plan-map') | Out-Null
 $targets = @()
 if ($SkillsDir) { $targets += $SkillsDir }
 if ($Codex) { $targets += (Join-Path $HOME '.codex/skills') }

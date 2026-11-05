@@ -7,12 +7,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-DEFAULT = Path(__file__).with_name('task_taxonomy.json')
+import userdata
+
+NAME = 'task_taxonomy.json'
+
+
+def default_path() -> Path:
+    return userdata.path(NAME)
 
 
 def load(path=None) -> dict:
     try:
-        data = json.loads(Path(path or DEFAULT).read_text(encoding='utf-8'))
+        data = json.loads(Path(path or default_path()).read_text(encoding='utf-8'))
         return data if isinstance(data, dict) else {}
     except Exception:
         return {}

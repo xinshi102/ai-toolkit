@@ -23,8 +23,12 @@ if os.name == "nt":
         BASE = PROJECT / "runtime"
 from adapters import adapter_for  # noqa: E402
 from adapters.base import hidden_options  # noqa: E402
+import package_registry  # noqa: E402
 from guard import StallMonitor, stop_process  # noqa: E402
+import userdata  # noqa: E402
+
 STATES = ("queued", "running", "succeeded", "failed", "cancelled", "interrupted", "blocked", "unknown")
+SCHEMA_VERSION = 1
 
 
 def inside(path, root):
@@ -93,6 +97,19 @@ def pid_alive(pid):
         return True
 
 
+def migrate_schema(db):
+    """Bring a tasks database to ``SCHEMA_VERSION``; safe to repeat."""
+    version = db.execute("PRAGMA user_version").fetchone()[0]
+    if version < 1:
+        if "attempt_id" not in {row[1] for row in db.execute("PRAGMA table_info(tasks)")}:
+            with db:
+                db.execute("ALTER TABLE tasks ADD COLUMN attempt_id TEXT")
+        db.execute("PRAGMA user_version=%d" % SCHEMA_VERSION)
+        db.commit()
+        version = SCHEMA_VERSION
+    return version
+
+
 class Queue:
     def __init__(self, state, project_root=None):
         self.project = Path(os.path.abspath(project_root or PROJECT))
@@ -102,7 +119,8 @@ class Queue:
                 raise ValueError('project root must be an existing canonical project under Projects')
         self.state = inside(state, self.project)
         self.state.mkdir(parents=True, exist_ok=True)
-        database = inside(self.state / "tasks.sqlite", self.state)
+        database = userdata.db_path("tasks.sqlite", self.state)
+        Path(database).parent.mkdir(parents=True, exist_ok=True)
         self.db = sqlite3.connect(database, timeout=10)
         self.db.row_factory = sqlite3.Row
         self.db.executescript("""
@@ -115,9 +133,7 @@ class Queue:
         CREATE TABLE IF NOT EXISTS control(key TEXT PRIMARY KEY,value TEXT);
         """)
         self.db.commit()
-        if "attempt_id" not in {r[1] for r in self.db.execute("PRAGMA table_info(tasks)")}:
-            with self.db:
-                self.db.execute("ALTER TABLE tasks ADD COLUMN attempt_id TEXT")
+        migrate_schema(self.db)
         identity = os.path.normcase(os.path.abspath(self.project))
         try:
             with self.db:
@@ -328,6 +344,12 @@ def execute(queue, task):
                                             "artifacts_verified": False, "reason": "cancelled before launch"})
             return
         spec = json.loads(row["spec"])
+        try:
+            package_registry.register(spec.get('cwd') or str(queue.state),
+                                      task_id=task, cwd=spec.get('cwd'),
+                                      adapter=spec.get('adapter'))
+        except Exception:
+            pass
         adapter = adapter_for(spec)
         result = {"exit_code": None, "terminal_event": None, "artifacts_verified": False,
                   "test_only": adapter.test_only,
@@ -510,6 +532,7 @@ def run(queue, idle_timeout, max_concurrency=2):
 
 
 def main():
+    userdata.ensure_all()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", required=True, help="project-internal durable state directory")
     parser.add_argument('--project-root', help='canonical project root; defaults to this shared project')

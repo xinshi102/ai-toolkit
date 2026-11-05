@@ -13,7 +13,7 @@ Three stop conditions are shared by every execution path:
   * no progress for STALL_IDLE_SECONDS while no tool call is running
     (progress = write/edit or any successful tool result);
   * wall clock over timeout.
-Thresholds are unchanged from run_package.py (5 / 1200 / 7200 / 3).
+Thresholds: 5 same errors / 1200s no progress / 21600s wall clock / 3 auto-continues.
 
 Adapters whose logs cannot expose tool events are deliberately degraded to
 wall-clock plus "log file did not grow" only; see ADAPTERS below.  They are not
@@ -29,7 +29,7 @@ from pathlib import Path
 
 STALL_REPEAT = 5
 STALL_IDLE_SECONDS = 1200
-DEFAULT_TIMEOUT = 7200
+DEFAULT_TIMEOUT = 21600  # 6h executor wall clock (user 2026-11-05); stall detection does the real work
 DEFAULT_AUTO_CONTINUE = 3
 CONTINUE_PROMPT = ('\u4e0a\u4e00\u8f6e\u56e0\u8f6e\u6570\u515c\u5e95\u4e0a\u9650\u4e2d\u65ad\u3002'
                    '\u7ee7\u7eed\u5b8c\u6210\u540c\u4e00\u5de5\u4f5c\u5305\u7684\u5269\u4f59\u90e8\u5206\uff0c'

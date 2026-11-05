@@ -7,14 +7,20 @@ import tempfile
 import time
 from pathlib import Path
 
-DEFAULT = Path(__file__).with_name('task_archive.json')
+import userdata
+
+NAME = 'task_archive.json'
 ARCHIVED = {}
+
+
+def default_path() -> Path:
+    return userdata.path(NAME)
 
 
 def load(path=None) -> dict:
     global ARCHIVED
     try:
-        data = json.loads(Path(path or DEFAULT).read_text(encoding='utf-8'))
+        data = json.loads(Path(path or default_path()).read_text(encoding='utf-8'))
         ARCHIVED = data if isinstance(data, dict) else {}
     except Exception:
         ARCHIVED = {}
@@ -23,7 +29,10 @@ def load(path=None) -> dict:
 
 def save(data, path=None):
     global ARCHIVED
-    path = Path(path or DEFAULT)
+    custom = path is not None
+    path = Path(path) if custom else default_path()
+    if not custom:
+        userdata.ensure(NAME)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=path.name + '.', suffix='.tmp', dir=str(path.parent))
     with open(fd, 'w', encoding='utf-8') as fh:

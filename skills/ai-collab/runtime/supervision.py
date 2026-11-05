@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 import events
+import userdata
 
 DEFAULTS = dict(max_calls=8, window_seconds=18000, token_limit=120000,
                 reserve_tokens=16000, max_workflow_calls=4, max_repairs=1)
@@ -45,12 +46,13 @@ def identity(flow):
 
 
 def ledger_path(flow, data):
-    # Shared across workflows/projects of this installed runtime, not account auth.
-    return Path(__file__).resolve().parent.parent / '.work/controller-usage.sqlite'
+    # Shared across workflows/projects, never inside the read-only installation.
+    return userdata.db_path('controller-usage.sqlite')
 
 
 def notify(flow, key, kind, payload):
-    return events.emit_once(flow.state / 'collab.sqlite', key, identity(flow), kind, payload=payload)
+    return events.emit_once(userdata.db_path('collab.sqlite', flow.state),
+                            key, identity(flow), kind, payload=payload)
 
 
 def bounded(value, count=1000):

@@ -17,6 +17,7 @@ import time
 import uuid
 
 from task_runner import BASE, PROJECT, Queue, hidden_options, inside, lock
+import userdata
 
 MAX_BINDING = 32768
 TERMINAL = {"succeeded", "failed", "cancelled", "blocked", "interrupted", "unknown"}
@@ -127,6 +128,8 @@ class Workflow:
             prior.get('persist_session', evidence.get('preflight', {}).get('persistent_session', False)) is not True or not sid):
             raise ValueError('continuation has no confirmed resumable predecessor; explicit handoff required')
         spec.update(resume=True, persist_session=True, session_id=sid, resume_from_task=row['id'])
+        if not spec.get('task') and prior.get('task'):
+            spec['task'] = prior['task']  # 续做自动继承原包的 task 树节点
         if evidence.get('stop_evidence', {}).get('category') == 'native_command_policy_denied':
             note = node.get('recovery_note')
             if not isinstance(note, str) or not note.strip():
@@ -561,6 +564,7 @@ class Workflow:
 
 
 def main():
+    userdata.ensure_all()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", default=str(PROJECT))
     parser.add_argument("--state", required=True)

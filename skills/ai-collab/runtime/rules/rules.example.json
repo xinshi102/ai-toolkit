@@ -1,0 +1,64 @@
+{
+  "rules": [
+    {
+      "name": "default-project-write",
+      "match": {
+        "task_id": [
+          "*"
+        ],
+        "project_path": [
+          "~/projects"
+        ],
+        "tags": [
+          "fix",
+          "feature",
+          "refactor"
+        ]
+      },
+      "executor": {
+        "adapter": "dsh-workspace",
+        "models": [
+          "deepseek-v4.1-flash",
+          "deepseek-v4.1-flash"
+        ]
+      },
+      "permission": "workspace-write",
+      "write_paths": [
+        "~/projects/shared"
+      ],
+      "requires_human": [
+        "deploy",
+        "prod_write",
+        "delete",
+        "push",
+        "external_send"
+      ],
+      "budget": {
+        "per_package": 100000,
+        "per_day": 1000000,
+        "per_agent": 5000000
+      }
+    }
+  ],
+  "budget": {
+    "unit": "usage-units",
+    "warn_ratio": 0.8,
+    "stop_ratio": 1.0,
+    "controllers": [
+      "GPT",
+      "deepseek-v4.1"
+    ],
+    "caps": {
+      "per_package": 100000,
+      "per_day": 1000000,
+      "per_agent": 5000000
+    },
+    "per_agent_caps": {
+      "GPT": {
+        "per_package": 50000,
+        "per_day": 500000,
+        "per_agent": 2000000
+      }
+    }
+  }
+}

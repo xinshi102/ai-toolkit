@@ -11,6 +11,9 @@ import re
 import time
 from pathlib import Path
 
+import suspend  # noqa: E402
+import eventlog  # noqa: E402
+
 UI_DIR = Path(__file__).resolve().parent / 'board_ui'
 PAGES = {'/': 'calm.html', '/calm': 'calm.html'}
 
@@ -259,6 +262,40 @@ def detail(r: dict) -> dict:
             'continuation_of': r.get('continuation_of') or '', 'session': r.get('session') or '',
             'prompt': r.get('prompt') or '', 'reply': r.get('reply') or '', 'files': files,
             'goal': goal(r.get('prompt'), _spec(r['dir'])), 'activity': activity(r['dir'], 15)}
+
+
+def budget_payload() -> dict:
+    """GET /api/budget data: per-AI used / limit / status (board wires up later)."""
+    from budget2 import api_payload  # late import keeps this module optional
+    return api_payload()
+
+
+def handle_get(path: str, qs: dict):
+    """看板新增的 GET 接口；不认识的路径返回 None，由 dashboard 继续分发。
+
+    GET /api/asks        -> 挂起列表
+    GET /api/why?id=<包id> -> 该包事件链 + 中文 why
+    """
+    if path == '/api/asks':
+        return {'asks': suspend.list_asks()}
+    if path == '/api/why':
+        package_id = (qs.get('id') or [''])[0]
+        return {'id': package_id,
+                'events': eventlog.read_events(package_id or None),
+                'why': eventlog.narrate(package_id)}
+    if path == '/api/inbox':
+        import inbox  # noqa: E402 - 可选接入，避免模块级循环 import
+        return inbox.collect()
+    if path == '/api/tree':
+        import task_tree_api  # noqa: E402
+        return task_tree_api.tree_payload()
+    return None
+
+
+def tree_assign(payload):
+    """POST /api/tree/assign (called from board_routes.do_POST)."""
+    import task_tree_api  # noqa: E402
+    return task_tree_api.assign(payload)
 
 
 def open_folder(path: str, allowed: list) -> bool:

@@ -124,3 +124,13 @@ python -B -W error::ResourceWarning -m unittest -v test_runtime
 ```
 
 Tests retain isolated `case-*` directories for audit; they only terminate the worker processes they create.
+
+## Legacy modules (M4)
+
+`gate.py`, `state.py`, `budget.py` and `collab_board.py` now live in
+`runtime/legacy/`. They are kept only for the historical event-bus / gate tests
+and **will be deleted in v1.2**. `events.py` is not legacy: it is used by
+`supervision.py` and stays in `runtime/`. Import the legacy helpers as
+`from legacy import gate, state, budget, collab_board`; their CLI scripts keep
+working via a small path bootstrap (`python legacy/gate.py` or
+`python -m legacy.gate`).

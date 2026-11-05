@@ -16,7 +16,7 @@ stall detection:
   - no progress for STALL_IDLE_SECONDS while no tool call is running
     (progress = Write/Edit or any successful tool result; a long-running
     command such as a migration rehearsal is covered by timeout_seconds only)
-  - wall clock over timeout_seconds (default 7200)
+  - wall clock over timeout_seconds (default 21600 = 6h)
 On a stall the process tree is stopped and receipt.stall explains why.
 
 Optional spec field auto_continue (default 3): how many times to resume the
@@ -32,10 +32,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import adapters  # noqa: E402
+import package_registry  # noqa: E402
 from owned_process import OwnedProcess  # noqa: E402
 from guard import (DEFAULT_AUTO_CONTINUE, DEFAULT_TIMEOUT, STALL_IDLE_SECONDS,  # noqa: E402
                    STALL_REPEAT, StallMonitor, should_continue, stop_process,
                    CONTINUE_PROMPT)
+import userdata  # noqa: E402
+import receipt_block  # noqa: E402
+import suspend  # noqa: E402
+import eventlog  # noqa: E402
 
 
 def _attempt(spec, out, suffix):
@@ -73,6 +78,8 @@ def _attempt(spec, out, suffix):
                'same_session_verified': bool(spec.get('session_id')) and parsed.get('session_id') == spec.get('session_id'),
                'stop_evidence': stop, 'max_turns_hit': max_turns_hit,
                'stall': stop if stop and stop.get('category') == 'stall' else None}
+    if spec.get('task'):
+        receipt['task'] = spec['task']
     (out / ('receipt%s.json' % suffix)).write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
     (out / ('reply%s.md' % suffix)).write_text(parsed.get('final_text', ''), encoding='utf-8')
     return receipt
@@ -90,13 +97,26 @@ def _result_errors(lines):
 
 
 def main(path):
+    userdata.ensure_all()
     spec_path = Path(path).resolve()
     out = spec_path.parent
     spec = json.loads(spec_path.read_text(encoding='utf-8-sig'))
+    try:
+        package_registry.register(out, task_id=spec.get('task_id'),
+                                  cwd=spec.get('cwd'),
+                                  adapter=spec.get('adapter') or 'dsh-workspace')
+    except Exception:
+        pass
     spec.setdefault('max_turns', ad.DEFAULT_MAX_TURNS)
     spec.setdefault('timeout_seconds', DEFAULT_TIMEOUT)
     spec.setdefault('persist_session', True)
     budget = int(spec.pop('auto_continue', DEFAULT_AUTO_CONTINUE))
+    package_id = str(spec.get('task_id') or spec_path.parent.name)
+    mandate_id = spec.get('mandate_id')
+    task = spec.get('task')
+    spec = dict(spec, prompt=receipt_block.augment_prompt(spec['prompt']))
+    eventlog.emit('dispatch', package_id, reason='派发工作包', mandate_id=mandate_id, task=task)
+    eventlog.emit('start', package_id, reason='执行者启动', mandate_id=mandate_id, task=task)
     attempt, suffix = 1, ''
     receipt = _attempt(spec, out, suffix)
     while should_continue(receipt, budget):
@@ -104,15 +124,38 @@ def main(path):
         budget -= 1
         attempt += 1
         suffix = '.c%d' % attempt
-        spec = dict(spec, prompt=CONTINUE_PROMPT, resume=True, session_id=sid)
+        eventlog.emit('continue', package_id, reason='轮数兜底上限，同会话续一次', mandate_id=mandate_id, task=task)
+        spec = dict(spec, prompt=receipt_block.augment_prompt(CONTINUE_PROMPT), resume=True, session_id=sid)
         receipt = _attempt(spec, out, suffix)
     ok = bool(receipt['parsed']['transport_policy_passed']) and not receipt['max_turns_hit'] and not receipt['stop_evidence']
+    # 双层回执：解析末尾 ai-collab 块；JSON 写坏时只在同一会话里请执行者重写一次。
+    block_field, block = receipt_block.resolve(
+        receipt, spec, lambda rw_spec, rw_suffix: _attempt(rw_spec, out, rw_suffix))
+    if block_field is not None:
+        receipt['block'] = block_field
+        (out / ('receipt%s.json' % suffix)).write_text(
+            json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
+    # 挂起零消耗 + 事件日志：status=ask 写挂起记录后进程正常退出，不留后台进程。
+    if isinstance(block, dict) and block.get('status') == 'ask':
+        eventlog.emit('ask', package_id, reason='执行者请示用户', mandate_id=mandate_id, task=task)
+        suspend.record_ask(block, str(out), receipt['parsed'].get('session_id') or '', package_id)
+    if isinstance(block, dict) and block.get('later'):
+        suspend.record_later(block, str(out), receipt['parsed'].get('session_id') or '', package_id)
+    if receipt.get('stall'):
+        eventlog.emit('stall', package_id, reason=str(receipt['stall'].get('reason') or 'stall'),
+                      mandate_id=mandate_id, task=task)
+    eventlog.emit('done' if ok else 'fail', package_id,
+                  reason='执行成功' if ok else '执行失败或卡住', mandate_id=mandate_id, task=task)
     summary = {'task_id': spec.get('task_id'), 'attempts': attempt, 'ok': ok,
                'max_turns_hit': receipt['max_turns_hit'], 'stall': receipt['stall'],
                'stopped': receipt['process_tree_confirmed_stopped'],
                'stop': receipt['stop_evidence'], 'session_id': receipt['parsed'].get('session_id'),
                'failures': receipt['parsed'].get('failures'),
                'reply': str(out / ('reply%s.md' % suffix))}
+    if task:
+        summary['task'] = task
+    if block_field is not None:
+        summary['block'] = block_field
     print(json.dumps(summary, ensure_ascii=False))
     return 0 if ok else 1
 

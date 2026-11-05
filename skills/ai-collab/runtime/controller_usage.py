@@ -63,6 +63,8 @@ _SCHEMA_STATEMENTS = (
     """,
 )
 
+SCHEMA_VERSION = 1
+
 ACTIVE_STATUSES = ("reserved", "unknown")
 TERMINAL_STATUSES = ("completed", "failed")
 VALID_FINISH_STATUSES = ("completed", "failed", "unknown")
@@ -112,6 +114,15 @@ def _retry_ddl(con: sqlite3.Connection, statement: str, attempts: int = 40) -> N
             time.sleep(min(0.25, 0.01 * (attempt + 1)))
 
 
+def migrate_schema(con: sqlite3.Connection) -> int:
+    """Bring the ledger to ``SCHEMA_VERSION``; safe to repeat."""
+    version = con.execute("PRAGMA user_version").fetchone()[0]
+    if version < 1:
+        _retry_ddl(con, "PRAGMA user_version=%d" % SCHEMA_VERSION)
+        version = SCHEMA_VERSION
+    return version
+
+
 def _connect(db_path) -> sqlite3.Connection:
     """Open and initialize the ledger with a generous SQLite busy timeout."""
     path = Path(db_path)
@@ -133,6 +144,7 @@ def _connect(db_path) -> sqlite3.Connection:
             raise
     for statement in _SCHEMA_STATEMENTS:
         _retry_ddl(con, statement)
+    migrate_schema(con)
     return con
 
 

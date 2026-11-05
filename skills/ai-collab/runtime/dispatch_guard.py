@@ -28,9 +28,11 @@ import tempfile
 from pathlib import Path
 
 import task_groups
+import userdata
+import rules
 
-DEFAULT_POLICY = Path(__file__).with_name('dispatch_policy.json')
-DEFAULT_CONTRACTS = Path(__file__).with_name('dispatch_contracts.json')
+POLICY_NAME = 'dispatch_policy.json'
+CONTRACTS_NAME = 'dispatch_contracts.json'
 ALIASES = {
     'dsh': 'DSH', 'dsh-workspace': 'DSH', 'codex': 'Codex', 'codex-workspace': 'Codex',
 }
@@ -65,6 +67,15 @@ def _load(path, default=None):
         return default or {}
 
 
+def default_policy_path() -> Path:
+    return userdata.path(POLICY_NAME)
+
+
+def default_contracts_path() -> Path:
+    userdata.ensure(CONTRACTS_NAME)
+    return userdata.path(CONTRACTS_NAME)
+
+
 def _save(path, data):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -75,7 +86,7 @@ def _save(path, data):
 
 
 def expected_from_policy(cwd, task='', policy=None) -> str:
-    policy = policy if isinstance(policy, dict) else _load(DEFAULT_POLICY)
+    policy = policy if isinstance(policy, dict) else _load(default_policy_path())
     task = str(task or '')
     tasks = policy.get('tasks') or {}
     if task and task in tasks:
@@ -96,13 +107,14 @@ def expected_from_policy(cwd, task='', policy=None) -> str:
 
 def check(cwd, task='', agent='', assigned='', continuation_of='', branch='',
           session_id='', allow_switch=False, reason='', policy=None,
-          contracts_path=DEFAULT_CONTRACTS) -> dict:
+          contracts_path=None) -> dict:
     """Check dispatch identity and executor continuity.
 
     `session_id` is accepted for legacy callers but does not gate a run: a
     value in the legacy JSON file is not proof that the native session exists
     or was resumed. Workflow history/native resume own that decision.
     """
+    contracts_path = Path(contracts_path) if contracts_path is not None else default_contracts_path()
     agent = normalize_agent(agent)
     assigned = normalize_agent(assigned)
     if assigned and agent and agent != assigned:
@@ -214,20 +226,28 @@ def admit(spec, agent, require_acceptance=False) -> dict:
     if test_limit is not None and max_test_runs is None:
         warnings.append('limits.max_test_runs is declared but test_policy.max_runs is absent; '
                         'actual test executions are not counted here')
-    return {'ok': True, 'agent': agent_name, 'phase': phase,
-            'prompt_chars': len(prompt), 'max_turns': turns,
-            'max_test_runs': max_test_runs, 'warnings': warnings}
+    result = {'ok': True, 'agent': agent_name, 'phase': phase,
+              'prompt_chars': len(prompt), 'max_turns': turns,
+              'max_test_runs': max_test_runs, 'warnings': warnings}
+    # Data-driven authorization: one gate call at the very end. When no
+    # rules.json exists rules.apply() returns None and behaviour is unchanged.
+    extra = rules.apply(spec, agent_name)
+    if extra:
+        result.update(extra)
+    return result
 
 
-def contract_for(task, contracts_path=DEFAULT_CONTRACTS) -> dict:
+def contract_for(task, contracts_path=None) -> dict:
     """Return the legacy task-group record, if any (compatibility lookup)."""
+    contracts_path = Path(contracts_path) if contracts_path is not None else default_contracts_path()
     group = task_groups.group_for(task)
     contract = _load(contracts_path).get(group)
     return contract if isinstance(contract, dict) else {}
 
 
-def record(task, agent, session_id='', contracts_path=DEFAULT_CONTRACTS) -> dict:
+def record(task, agent, session_id='', contracts_path=None) -> dict:
     """Write the legacy executor/session record; not authoritative session storage."""
+    contracts_path = Path(contracts_path) if contracts_path is not None else default_contracts_path()
     group = task_groups.group_for(task)
     contracts = _load(contracts_path)
     contracts[group] = {'executor': normalize_agent(agent), 'session_id': str(session_id or '')}

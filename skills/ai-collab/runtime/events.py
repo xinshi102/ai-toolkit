@@ -33,10 +33,20 @@ CREATE TABLE IF NOT EXISTS event_keys (
 """
 
 MAX_PAYLOAD = 8192
+SCHEMA_VERSION = 1
 
 
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat(timespec='seconds')
+
+
+def migrate_schema(con: sqlite3.Connection) -> int:
+    """Bring an events database to ``SCHEMA_VERSION``; safe to repeat."""
+    version = con.execute('PRAGMA user_version').fetchone()[0]
+    if version < 1:
+        con.execute('PRAGMA user_version=%d' % SCHEMA_VERSION)
+        version = SCHEMA_VERSION
+    return version
 
 
 def connect(db_path) -> sqlite3.Connection:
@@ -46,6 +56,7 @@ def connect(db_path) -> sqlite3.Connection:
     con.row_factory = sqlite3.Row
     con.execute('PRAGMA journal_mode=WAL')
     con.executescript(SCHEMA)
+    migrate_schema(con)
     return con
 
 

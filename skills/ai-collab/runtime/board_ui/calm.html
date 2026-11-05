@@ -110,6 +110,26 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px s
 .arch button:hover{color:var(--tx);border-color:var(--dim)}
 .arch span{color:var(--dim);font-size:12.5px}
 @media(max-width:1100px){.app{grid-template-columns:1fr}aside{border-left:0;border-top:1px solid var(--line)}body{overflow:auto}.app{height:auto}main{overflow:visible}}
+.qhint{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:1px 8px}
+.qc{padding:12px 0 14px;border-bottom:1px solid var(--line)}
+.qc:last-child{border:0}
+.qc .qh{display:flex;justify-content:space-between;align-items:baseline}
+.qc .qh b{font-weight:500;font-size:14px}
+.qc .qh small{color:var(--dim);font-size:11.5px;font-weight:400;margin-left:6px}
+.qc .big{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:6px 0 2px;line-height:1.2}
+.qc .big small{font-size:13px;font-weight:400;color:var(--dim);letter-spacing:0}
+.qc .big .pct{font-size:12px;font-weight:400;color:var(--dim);margin-left:8px}
+.qc .bar{height:3px;background:var(--faint);border-radius:2px;margin:8px 0 6px;overflow:hidden}
+.qc .bar i{display:block;height:100%;background:var(--tx2);border-radius:2px}
+.qc .bar i.warn{background:var(--att)}
+.qc .bar i.crit{background:var(--bad)}
+.qc .meta{color:var(--dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qc .ex{color:var(--dim);font-size:11.5px;margin-top:5px;line-height:1.5}
+.qc .ex span{display:inline-block;margin-right:12px;white-space:nowrap}
+.qc.unknown{opacity:.55}
+.qc.unknown .big{font-size:18px;color:var(--dim)}
+.qc .reason{color:var(--dim);font-size:12px;margin-top:3px;white-space:normal}
+.qc .stale{color:var(--att);font-size:11px;margin-top:4px}
 </style></head>
 <body><div class="app">
 <main>
@@ -123,7 +143,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px s
   <section><h2>任务</h2><div class="tasks" id="tasks"></div></section>
   <section><h2>今天的执行</h2><div class="dots" id="dots"></div><div class="dsum" id="dsum"></div></section>
 </main>
-<aside><div class="agh"><h2>AI 资源</h2><span class="seg"><button data-days="1" class="on">今日</button><button data-days="7">7 天</button></span></div><div id="agents"></div></aside>
+<aside><div class="agh"><h2>AI 资源</h2><span class="qhint">额度</span></div><div id="quota"></div></aside>
 </div>
 <div id="veil"></div>
 <aside id="drawer" aria-hidden="true"><div class="dw-h"><h3 id="dwT"></h3><button class="dw-x" id="dwX" title="关闭 (Esc)">✕</button></div><div class="dw-b" id="dwB"></div></aside>
@@ -140,7 +160,7 @@ const ago=s=>{const d=now()-s;return d<60?'刚刚':d<3600?Math.round(d/60)+' 分
 const hm=s=>{const d=new Date(s*1000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const mtag=m=>/deepseek/i.test(m)?'deepseek':/sonnet/i.test(m)?'sonnet':/opus/i.test(m)?'opus':(m||'');
 async function J(u,o){const r=await fetch(u,Object.assign({cache:'no-store'},o||{}));if(!r.ok)throw new Error(r.status);return r.json()}
-const S={days:1,agents:null,tasks:null,feed:null,ok:0,err:false,arch:{}};
+const S={quota:null,tasks:null,feed:null,ok:0,err:false,arch:{}};
 const AK=(k,id)=>'task:'+k+':'+id;
 const isArch=(k,id)=>!!S.arch[AK(k,id)];
 async function setArch(k,id,on){const key=AK(k,id);
@@ -188,13 +208,51 @@ function render(){
   const nb=today.filter(r=>r.status==='bad').length;
   $('dsum').textContent=today.length?`${today.length} 个工作包${nb?` · ${nb} 个失败（红色）`:' · 没有失败'} · 点方块看详情`:'今天还没有执行记录';
 }
-const AN={'Codex / GPT':['GPT','主控'],DSH:['DSH','执行'],Kimi:['Kimi','执行'],Hermes:['Hermes','执行'],OpenCode:['OpenCode','执行']};
-function renderAgents(){
-  if(!S.agents)return;
-  $('agents').innerHTML=(S.agents.agents||[]).map(a=>{const [n,r]=AN[a.agent]||[a.agent,''];let v,s,q=null,on=true;
-    if(a.agent==='Codex / GPT'){q=a.quota&&a.quota.primary;v=q!=null?q+'%':T(a.input);s=q!=null?`5 小时额度 · 周 ${a.quota.secondary??'?'}%`:`输入 token · ${a.calls} 次`;on=q!=null||a.calls>0}
-    else{v=T(a.input);s=`输入 token · ${a.calls} 次`;on=a.calls>0}
-    return `<div class="ag ${on?'':'off'}" title="${esc(a.note||'')}"><b>${n}<small>${r}</small></b><span class="v">${esc(v)}</span><span class="s">${esc(s)}</span>${q!=null?`<div class="q"><i class="${q>80?'hot':''}" style="width:${q}%"></i></div>`:''}</div>`}).join('');
+const QUOTA_META={gpt:['GPT','主控'],dsh:['DSH','执行']};
+const PERIOD={'5h':'5 小时',week:'本周',month:'本月',balance:'余额',day:'今日'};
+const qnum=n=>(n==null||n==='')?'—':(+n).toLocaleString('zh-CN',{maximumFractionDigits:2});
+function qreset(r,period){
+  if(r==null||r==='')return '';
+  let d;const s=String(r);
+  if(/^\d+(\.\d+)?$/.test(s)){const v=+s;d=new Date(v>1e12?v:v*1000)}else d=new Date(s);
+  if(isNaN(d.getTime()))return String(r);
+  if(period==='5h')return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  return (d.getMonth()+1)+'/'+d.getDate();
+}
+function qextra(e){
+  if(!e)return '';
+  let v='';
+  if(e.unit==='percent'&&e.pct_used!=null)v=qnum(e.pct_used)+'%';
+  else if(e.unit==='CNY'&&e.remaining!=null)v='¥'+qnum(e.remaining);
+  else if(e.used!=null&&e.limit!=null)v=qnum(e.used)+'/'+qnum(e.limit);
+  else if(e.pct_used!=null)v=qnum(e.pct_used)+'%';
+  else if(e.used!=null)v=qnum(e.used)+(e.unit==='credits'?' 积分':'');
+  else if(e.remaining!=null)v=qnum(e.remaining);
+  const lab=e.label||e.agent||'';
+  return lab?(lab+' '+v):v;
+}
+function qcard(r){
+  const [n,role]=QUOTA_META[r.key]||[r.agent||'',''];
+  const unk=r.status!=='ok';
+  let big,bar='',meta='';
+  if(unk){big='<div class="big">未知</div>';meta='<div class="reason">'+esc(r.reason||'暂无数据')+'</div>';}
+  else if(r.unit==='CNY'){big='<div class="big">¥'+qnum(r.remaining)+'</div>';meta='<div class="meta">余额</div>';}
+  else{
+    const pct=r.pct_used;
+    if(r.unit==='percent')big='<div class="big">'+(pct!=null?qnum(pct)+'%':'—')+'</div>';
+    else big='<div class="big">'+qnum(r.used)+'<small> / '+qnum(r.limit)+'</small>'+(pct!=null?'<span class="pct">'+qnum(pct)+'%</span>':'')+'</div>';
+    if(pct!=null){const cls=pct>=95?'crit':pct>=80?'warn':'';bar='<div class="bar"><i class="'+cls+'" style="width:'+Math.max(0,Math.min(100,pct))+'%"></i></div>';}
+    const per=PERIOD[r.period]||'';const rs=qreset(r.reset_at,r.period);
+    meta='<div class="meta">'+esc(per)+(rs?' · '+rs+' 重置':'')+(r.note?' · '+esc(r.note):'')+'</div>';
+  }
+  const ex=(r.extra||[]).map(e=>'<span>'+esc(qextra(e))+'</span>').join('');
+  const stale=r.stale?'<div class="stale">数据更新于 '+ago(r.last_ok_at||r.fetched_at||now())+'</div>':'';
+  return '<div class="qc'+(unk?' unknown':'')+'"><div class="qh"><b>'+esc(n)+'<small>'+esc(role)+'</small></b></div>'+big+bar+meta+(ex?'<div class="ex">'+ex+'</div>':'')+stale+'</div>';
+}
+function renderQuota(){
+  if(!S.quota)return;
+  const rows=Array.isArray(S.quota)?S.quota:(S.quota.items||[]);
+  $('quota').innerHTML=rows.map(qcard).join('');
 }
 function renderSync(){const e=$('sync');e.className='sync'+(S.err?' bad':'');e.textContent=S.err?'刷新失败，重试中':S.ok?'已同步 '+hm(S.ok):'加载中'}
 
@@ -252,28 +310,27 @@ document.addEventListener('click',e=>{
   const p=e.target.closest('[data-plan]');if(p){showPlan(p.dataset.plan);return}
   const s=e.target.closest('[data-state]');if(s){showState(s.dataset.state);return}
   const d=e.target.closest('[data-dir]');if(d){showRun(d.dataset.dir);return}
-  const g=e.target.closest('[data-days]');if(g){S.days=+g.dataset.days;document.querySelectorAll('[data-days]').forEach(x=>x.classList.toggle('on',x===g));loadAgents();return}
   if(e.target===veil||e.target.closest('#dwX'))closeDw();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDw()});
 
 /* data */
 async function loadMain(){try{const [t,f,a]=await Promise.all([J('/api/tasks'),J('/api/feed'),J('/api/archive').catch(()=>({archived:S.arch}))]);S.tasks=t;S.feed=f.items||[];S.arch=a.archived||{};S.err=false;S.ok=now();render()}catch(e){S.err=true}renderSync()}
-async function loadAgents(){try{S.agents=await J('/api/agents?days='+S.days);renderAgents()}catch(e){}}
+async function loadQuota(){try{S.quota=await J('/api/quota');renderQuota()}catch(e){}}
 async function loadMeta(){try{const m=await J('/api/meta');$('srcMenu').innerHTML=m.sources.map(s=>`<button data-open="${esc(s.path)}">${esc(s.label)}<small>${esc(s.path)}</small></button>`).join('')}catch(e){}}
-loadMain();loadAgents();loadMeta();
+loadMain();loadQuota();loadMeta();
 setInterval(()=>{if(!document.hidden){loadMain();refreshRun()}},10000);
-setInterval(()=>{if(!document.hidden)loadAgents()},30000);
+setInterval(()=>{if(!document.hidden)loadQuota()},30000);
 setInterval(()=>{renderSync();if(S.tasks)render()},60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadMain();loadAgents()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadMain();loadQuota()}});
 })();
 </script></body></html>
 t.hidden)loadMain()},10000);
-setInterval(()=>{if(!document.hidden)loadAgents()},30000);
+setInterval(()=>{if(!document.hidden)loadQuota()},30000);
 setInterval(()=>{renderSync();if(S.tasks)render()},60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadMain();loadAgents()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadMain();loadQuota()}});
 })();
 </script></body></html>
-tychange',()=>{if(!document.hidden){loadMain();loadAgents()}});
+tychange',()=>{if(!document.hidden){loadMain();loadQuota()}});
 })();
 </script></body></html>

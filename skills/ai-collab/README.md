@@ -27,3 +27,10 @@ powershell -File start-dashboard.ps1          # http://127.0.0.1:18765/
 cd runtime; $env:DSH_PROGRAM="<你的 DSH 目录>"; python -B -m unittest discover -s tests -p "test_*.py"
 ```
 `install.ps1` 要先跑一次，DSH 覆盖文件里的路径才会被填好。
+
+## 2026-11-05 · v1.2 主控台
+- `/console`：任务树（宽时变导图）、需要处理的事（决定 / 失败 / 完成待验收，原位作答并续接原会话）、任务细节、AI 资源；各区域可收起归零，从屏幕边缘拉出。
+- 任务身份：spec 可带 `task`（点号层级），续做自动继承；`GET /api/tree`、`POST /api/tree/assign`。
+- 收件箱：`GET /api/inbox`、`POST /api/inbox/act`；Windows 桌面通知（每件单独弹，可设安静时段，`--no-notify` 关闭）。
+- 规则与授权（`rules/`）、主控预算（`budget2/`）、双层回执与挂起零消耗（`receipt_block.py`、`suspend.py`、`ask.py`）、事件日志与 `why.py`。
+- 执行者墙钟超时默认 6 小时，卡住检测（5 次同错 / 20 分钟无进展）不变。

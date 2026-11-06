@@ -230,14 +230,14 @@ class ActTests(_Base):
         self.assertNotIn('model', spec)
         self.assertIn('reject', self._actions())
 
-    def test_fail_A_retry_with_hy4std(self):
+    def test_fail_A_retry_with_fallback_model(self):
         self.pkg('f', False, reason='500', n=2, session='sess-F')
         with self.sync_launch(), mock.patch.object(run_package, 'main', return_value=0) as rp:
             res = inbox.act('fail:f', 'A', None)
         self.assertEqual(res['next'], 'resumed')
         rp.assert_called_once()
         spec = json.loads(Path(rp.call_args[0][0]).read_text(encoding='utf-8'))
-        self.assertEqual(spec['model'], 'hy4std')
+        self.assertEqual(spec['model'], 'deepseek-v4.1-flash')
         self.assertTrue(spec['resume'])
         self.assertEqual(spec['session_id'], 'sess-F')
         self.assertIn('retry', self._actions())

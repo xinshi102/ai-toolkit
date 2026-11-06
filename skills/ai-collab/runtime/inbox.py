@@ -453,7 +453,7 @@ def collect(roots=None) -> dict:
     order = {'decide': 0, 'ms': 1, 'fail': 2, 'done': 3}
     items.sort(key=lambda it: (order.get(it['kind'], 9), -it['created_at']))
     counts = {k: sum(1 for it in items if it['kind'] == k)
-              for k in ('decide', 'fail', 'done')}
+              for k in ('decide', 'ms', 'fail', 'done')}
     counts['queued'] = controller_link.queued_count()
     return {'items': items, 'counts': counts}
 

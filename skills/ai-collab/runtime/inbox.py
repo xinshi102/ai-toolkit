@@ -26,6 +26,7 @@ import eventlog  # noqa: E402
 import suspend  # noqa: E402
 import userdata  # noqa: E402
 import package_discovery  # noqa: E402
+import controller_link  # noqa: E402 - 车道 ctl 新模块
 
 ACCEPTED = 'accepted.json'
 DISMISSED = 'dismissed.json'
@@ -390,6 +391,18 @@ def collect(roots=None) -> dict:
             items.append(it)
     now = time.time()
     pkgs = [(d, _read_package(d)) for d in _package_dirs(roots)]
+
+    # 车道 ctl：逐个判定包有没有主控在管；受控包不显示包级 fail/done。
+    controlled_pkgs = set()
+    controlled_task_dirs = {}
+    for d, _p in pkgs:
+        info = controller_link.owner(d)
+        key = str(d.resolve())
+        if info['controlled']:
+            controlled_pkgs.add(key)
+            if info['task_dir']:
+                controlled_task_dirs[str(info['task_dir'])] = info['task_dir']
+
     ok_ids_continued = set()
     for _d, _p in pkgs:
         if _p and _p['ok']:
@@ -400,6 +413,8 @@ def collect(roots=None) -> dict:
         pkg = pkg0
         if pkg is None:
             continue
+        if str(d.resolve()) in controlled_pkgs:
+            continue  # 交给主控，主控台不逐包显示
         package_id = str(pkg['spec'].get('task_id') or d.name)
         if pkg['ok']:
             if package_id in accepted or 'done:' + package_id in handled or 'fail:' + package_id in handled:
@@ -417,10 +432,29 @@ def collect(roots=None) -> dict:
             if package_id in ok_ids_continued:
                 continue  # 后续续做已成功，这次失败已被接住
             items.append(_package_item(pkg, 'fail'))
-    order = {'decide': 0, 'fail': 1, 'done': 2}
-    items.sort(key=lambda it: (order[it['kind']], -it['created_at']))
+
+    # 主控上报的事：NEEDS_DECISION -> decide；Plan Map 顶层 done -> ms。
+    # 只在"确实有主控在管"时才出现，避免污染没有主控的普通收件箱。
+    meta = {}
+    if controlled_pkgs or controlled_task_dirs:
+        for it, m in controller_link.needs_decision_items(
+                list(controlled_task_dirs.values()), handled):
+            items.append(it)
+            meta[it['id']] = m
+        first_td = next(iter(controlled_task_dirs.values()), None)
+        for it, m in controller_link.milestone_items(handled=handled):
+            if first_td is not None:
+                m['task_dir'] = str(first_td)
+            items.append(it)
+            meta[it['id']] = m
+        if meta:
+            controller_link.remember_targets(meta)
+
+    order = {'decide': 0, 'ms': 1, 'fail': 2, 'done': 3}
+    items.sort(key=lambda it: (order.get(it['kind'], 9), -it['created_at']))
     counts = {k: sum(1 for it in items if it['kind'] == k)
               for k in ('decide', 'fail', 'done')}
+    counts['queued'] = controller_link.queued_count()
     return {'items': items, 'counts': counts}
 
 
@@ -472,14 +506,33 @@ def _choice_index(choice):
     return c
 
 
+def _ctl_info(raw_kind, value, owner_info, rec, pkg, pkg_dir):
+    """给受控的旧三类事项构造 controller_link.defer 需要的 meta。"""
+    info = dict(owner_info)
+    info['package_dir'] = pkg_dir or ''
+    info['kind'] = {'ask': 'decide', 'fail': 'fail', 'done': 'done'}.get(raw_kind, 'decide')
+    spec = (pkg or {}).get('spec') or {}
+    if raw_kind == 'ask':
+        questions = (rec or {}).get('questions') or []
+        q0 = questions[0] if questions and isinstance(questions[0], dict) else {}
+        info['title'] = str(q0.get('title') or '') or value
+        info['options'] = {o['key']: o['label'] for o in _ask_options(rec or {})}
+    else:
+        info['title'] = str(spec.get('title') or '') or value
+        base = FAIL_OPTIONS if raw_kind == 'fail' else DONE_OPTIONS
+        info['options'] = {o['key']: o['label'] for o in base}
+    return info
+
+
 # ---- act ------------------------------------------------------------------
 def act(item_id, choice=None, text=None) -> dict:
     item_id = str(item_id or '')
     if ':' not in item_id:
         return {'ok': False, 'next': None, 'package': None, 'error': 'bad id'}
     raw_kind, value = item_id.split(':', 1)
-    # 合同里的 id 前缀是 ask:/fail:/done:，其中 ask: 对应 kind=decide
-    kind = {'ask': 'decide', 'fail': 'fail', 'done': 'done'}.get(raw_kind)
+    # 合同里的 id 前缀是 ask:/fail:/done:（ask -> decide）；ctl 新增 nd:/ms:。
+    kind = {'ask': 'decide', 'fail': 'fail', 'done': 'done',
+            'nd': 'decide', 'ms': 'ms'}.get(raw_kind)
     if kind is None:
         return {'ok': False, 'next': None, 'package': None, 'error': 'bad kind'}
     text = None if text is None else str(text)
@@ -487,7 +540,51 @@ def act(item_id, choice=None, text=None) -> dict:
         text = text[:MAX_TEXT]
     choice = None if choice is None else str(choice).strip().upper()
     payload = {'id': item_id, 'choice': choice, 'text': text}
+    if item_id in _load(HANDLED):
+        return {'ok': False, 'next': None, 'package': None, 'error': '这件事已经处理过了'}
 
+    # ---- 车道 ctl：主控在管时只记决定、不启动续做 ----
+    rec = None
+    pkg = None
+    pkg_dir = ''
+    if raw_kind == 'ask':
+        rec = suspend.find(value)
+        if rec is not None:
+            pkg_dir = str(rec.get('package_dir') or '')
+    elif raw_kind in ('fail', 'done'):
+        pkg = _find_package(value)
+        if pkg is not None:
+            pkg_dir = str(pkg.get('dir') or '')
+
+    # 该选择原本会不会启动进程（ask.answer / run_package.main）
+    launches = (raw_kind == 'ask'
+                or (raw_kind == 'done' and choice != 'A')
+                or (raw_kind == 'fail' and choice == 'A'))
+
+    if raw_kind in ('nd', 'ms'):
+        # 主控上报的事项本身就是受控的；nd 一律把决定交给主控，ms 选 B 才记。
+        info = controller_link.target_info(item_id)
+        if raw_kind == 'nd' or choice == 'B':
+            res = controller_link.defer(item_id, info, choice, text, queue=True)
+            _mark(HANDLED, item_id, {'next': 'queued'})
+            return res
+        controller_link.defer(item_id, info, choice, text, queue=False)
+        _mark(HANDLED, item_id, {'next': 'accepted'})
+        return {'ok': True, 'next': 'accepted', 'package': None}
+
+    if pkg_dir:
+        owner_info = controller_link.owner(pkg_dir)
+        if owner_info['controlled']:
+            info = _ctl_info(raw_kind, value, owner_info, rec, pkg, pkg_dir)
+            if launches:
+                res = controller_link.defer(item_id, info, choice, text, queue=True)
+                _mark(HANDLED, item_id, {'next': 'queued'})
+                return res
+            # 不启动进程的操作（done 选 A / fail 选 C / fail 选 B）照常执行，
+            # 但也写进 USER_DECISIONS.md，好让主控知道。
+            controller_link.defer(item_id, info, choice, text, queue=False)
+
+    # ---- 以下保持原有行为 ----
     if kind == 'decide':
         import ask
         rec = suspend.find(value)
@@ -510,6 +607,8 @@ def act(item_id, choice=None, text=None) -> dict:
             launch(run_package.main, str(spec_path))
             _emit('reject', value, reason='退回并续做', payload=payload)
             package_id, next_ = cont['task_id'], 'resumed'
+    elif kind == 'ms':
+        return {'ok': False, 'next': None, 'package': None, 'error': 'bad kind'}
     else:  # fail
         if choice == 'C':
             _mark(DISMISSED, value, {'by': 'inbox'})
@@ -528,3 +627,16 @@ def act(item_id, choice=None, text=None) -> dict:
 
     _mark(HANDLED, item_id, {'next': next_})
     return {'ok': True, 'next': next_, 'package': package_id}
+
+
+def read_all(kind='done', roots=None) -> dict:
+    """一键已读：done（完成待验收）与 ms（里程碑完成）。把当前列出的这两类事项记为已读。"""
+    if kind not in ('done', 'ms'):
+        return {'ok': False, 'count': 0, 'error': 'only done/ms'}
+    items = [it for it in collect(roots)['items'] if it['kind'] == kind]
+    for it in items:
+        value = it['id'].split(':', 1)[1]
+        _mark(ACCEPTED, value, {'by': 'read-all'})
+        _mark(HANDLED, it['id'], {'next': 'read'})
+    _emit('accept', 'inbox', reason='一键已读 %d 件' % len(items), payload={'kind': kind, 'count': len(items)})
+    return {'ok': True, 'count': len(items)}

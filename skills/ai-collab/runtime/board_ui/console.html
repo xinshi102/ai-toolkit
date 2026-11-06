@@ -66,7 +66,9 @@ kbd{border:1px solid var(--faint);border-radius:4px;padding:0 5px;font:12px Cons
 .ag .s,.ag .q{display:none}
 @container res (min-width:260px){.ag .s{display:block;grid-column:1/-1;color:var(--dim);font-size:12px}.ag .q{display:block;grid-column:1/-1;height:2px;background:var(--faint);margin-top:3px;border-radius:2px}.ag .q i{display:block;height:100%;background:var(--tx2);border-radius:2px}.ag .q i.hot{background:var(--att)}.ag .q i.red{background:var(--bad)}}
 /* inbox: one column; the chosen item opens in place, options follow the text */
-.grp{font-size:11.5px;color:var(--dim);margin:10px 0 2px;letter-spacing:.04em}.grp:first-child{margin-top:0}
+.grp{display:flex;align-items:baseline;gap:6px;font-size:11.5px;color:var(--dim);margin:10px 0 2px;letter-spacing:.04em}.grp:first-child{margin-top:0}
+.grp .gn{font-variant-numeric:tabular-nums}.grp .gt{margin-left:auto;opacity:0;transition:opacity .15s;letter-spacing:0}#inbox:hover .grp .gt{opacity:1}.grp .gt button{color:var(--dim);font-size:12px}.grp .gt button:hover{color:var(--tx)}
+.unfold{display:block;margin:2px 0 4px 20px;color:var(--dim);font-size:12.5px}.unfold:hover{color:var(--tx)}
 .it{display:grid;grid-template-columns:8px minmax(0,1fr);gap:0 12px;padding:6px 10px;margin:0 -10px;border-radius:8px;cursor:pointer}
 .it:hover{background:var(--s1)}.it.sel{background:var(--s1);cursor:default}.it>i{margin-top:8px}
 .it .t1{display:flex;gap:10px;align-items:baseline;min-width:0}

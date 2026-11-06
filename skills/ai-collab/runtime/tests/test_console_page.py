@@ -78,7 +78,7 @@ class ConsoleHtmlStructureTest(unittest.TestCase):
     def test_console_js_contract(self):
         for marker in ('/api/tree', '/api/inbox', '/api/quota', '/api/detail',
                        '/api/inbox/act', "localStorage.getItem('console-v4')",
-                       '已发给 GPT，继续中', "setInterval(()=>{if(!document.hidden)loadAll()},10000)",
+                       '已交给执行者，在原会话继续', '/api/inbox/read_all', "setInterval(()=>{if(!document.hidden)loadAll()},10000)",
                        'console-theme', 'window.__mm=mm', 'syncAmberHint'):
             self.assertIn(marker, self.js, marker)
 

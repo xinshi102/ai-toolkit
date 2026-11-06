@@ -31,9 +31,10 @@ log = logging.getLogger('collab.notify')
 POLL_SECONDS = 10
 DEFAULT_PORT = 18765
 
-KINDS = ('decide', 'fail', 'done')
+KINDS = ('decide', 'ms', 'fail', 'done')
 KIND_TITLE = {
     'decide': '需要你决定',
+    'ms': '里程碑完成',
     'fail': '失败',
     'done': '完成 · 待验收',
 }

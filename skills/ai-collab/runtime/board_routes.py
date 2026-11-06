@@ -61,6 +61,18 @@ def make_handler(roots):
 
         def do_POST(self):
             u = urlparse(self.path)
+            if u.path == '/api/inbox/read_all':
+                import inbox  # noqa: E402
+                if not inbox.is_local(self.client_address):
+                    self._json({'error': 'local only'}, 403)
+                    return
+                try:
+                    length = min(int(self.headers.get('Content-Length') or 0), 1024)
+                    payload = json.loads(self.rfile.read(length) or b'{}')
+                except Exception:
+                    payload = {}
+                self._json(inbox.read_all(str((payload or {}).get('kind') or 'done')))
+                return
             if u.path == '/api/inbox/act':
                 import inbox  # noqa: E402 - 可选接入，避免模块级循环 import
                 if not inbox.is_local(self.client_address):

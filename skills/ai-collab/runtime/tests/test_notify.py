@@ -159,7 +159,7 @@ class NotifyTests(unittest.TestCase):
         cfg = notify.load_config(Path(self.tmp.name) / 'missing.json')
         self.assertTrue(cfg['enabled'])
         self.assertIsNone(cfg['quiet_hours'])
-        self.assertEqual(cfg['kinds'], ['decide', 'fail', 'done'])
+        self.assertEqual(cfg['kinds'], ['decide', 'ms', 'fail', 'done'])
 
     def test_toast_xml_escapes_and_links(self):
         xml = notify.toast_xml('A & B', '<x>', 'http://h/console#ask:1')

@@ -19,8 +19,8 @@ async function J(u,o){const r=await fetch(u,Object.assign({cache:'no-store'},o||
 async function Jor(u,fallback){try{return await J(u)}catch(e){return fallback}}
 
 const ST_LABEL={ok:'完成',warn:'完成·有告警',bad:'失败',run:'运行中',idle:'中断',gone:'已被接替',att:'等你决定'};
-const KIND={decide:{grp:'需要你决定',dot:'att'},fail:{grp:'失败',dot:'bad'},done:{grp:'完成 · 待验收',dot:'done'}};
-const KIND_ORDER={decide:0,fail:1,done:2};
+const KIND={decide:{grp:'需要你决定',dot:'att'},ms:{grp:'里程碑完成',dot:'done'},fail:{grp:'失败',dot:'bad'},done:{grp:'完成 · 待验收',dot:'done'}};
+const KIND_ORDER={decide:0,ms:1,fail:2,done:3};
 const STG_CLS={done:'done',run:'run',att:'att',active:'run',ok:'done',bad:'bad',blocked:'att',pending:''};
 const QNAME={gpt:'GPT',dsh:'DSH'};
 const QORDER={gpt:0,dsh:1};
@@ -63,16 +63,19 @@ const SAMPLE_INBOX={
  counts:{decide:1,fail:1,done:1}
 };
 
-const S={tree:SAMPLE_TREE,inbox:SAMPLE_INBOX,quota:null,
-         selKey:'xinshi.planmap',selInbox:'ask:planmap-drag',acted:new Set(),errors:{}};
+/* live page never shows sample data; samples stay only for reference */
+const S={tree:{nodes:[],unassigned:[]},inbox:{items:[],counts:{}},quota:null,loaded:false,offline:false,
+         selKey:null,selInbox:null,acted:new Set(),busy:new Set(),errors:{},fold:{done:true,ms:true}};
 
 /* ---------- data ---------- */
 async function loadAll(){
   const [tree,inbox,quota]=await Promise.all([
     Jor('/api/tree',null),Jor('/api/inbox',null),Jor('/api/quota',null)
   ]);
-  if(tree&&Array.isArray(tree.nodes))S.tree=tree;else S.tree=SAMPLE_TREE;
-  if(inbox&&Array.isArray(inbox.items))S.inbox=inbox;else S.inbox=SAMPLE_INBOX;
+  S.offline=!(tree&&inbox);
+  if(tree&&Array.isArray(tree.nodes))S.tree=tree;
+  if(inbox&&Array.isArray(inbox.items)){S.inbox=inbox;S.loaded=true}
+  if(!S.selKey&&S.tree.nodes&&S.tree.nodes.length)S.selKey=S.tree.nodes[0].key;
   if(quota)S.quota=quota;else S.quota=null;
   renderAll();
 }
@@ -157,13 +160,30 @@ function renderResources(){
 }
 
 /* ---------- inbox ---------- */
+function renderQueuedHint(){
+  const q=(S.inbox.counts||{}).queued||0;
+  let h=$('queuedHint');
+  if(!h){h=document.createElement('span');h.id='queuedHint';
+    h.style.cssText='color:var(--dim);font-size:11px;font-weight:400;letter-spacing:0';
+    const lbl=document.querySelector('#inbox .lbl');
+    if(lbl)lbl.insertBefore(h,lbl.querySelector('.hide'));}
+  h.textContent=q>0?(q+' 条决定等主控处理'):'';
+}
 function renderInbox(){
   const items=inboxItems();
+  renderQueuedHint();
   if(!items.some(x=>x.id===S.selInbox))S.selInbox=items.length?items[0].id:null;
-  let last='';
+  let last='',shown={};
+  const cnt={};items.forEach(x=>cnt[x.kind]=(cnt[x.kind]||0)+1);
+  if(!S.loaded){$('list').innerHTML=`<div class="grp">${S.offline?'看板服务暂时连不上，10 秒后自动重试':'正在读取…'}</div>`;$('inboxCount').textContent='';return}
+  if(!items.length){$('list').innerHTML='<div class="grp">没有需要你处理的事</div>';$('inboxCount').textContent='0';syncAmberHint();return}
   $('list').innerHTML=items.map(x=>{
     const k=KIND[x.kind]||{grp:'其它',dot:''};
-    const g=x.kind!==last?`<div class="grp">${esc(k.grp)}</div>`:'';last=x.kind;
+    shown[x.kind]=(shown[x.kind]||0)+1;
+    const folded=S.fold[x.kind]&&cnt[x.kind]>3&&x.id!==S.selInbox;
+    if(folded&&shown[x.kind]>3){if(shown[x.kind]===4)return `<button class="unfold" data-unfold="${esc(x.kind)}">还有 ${cnt[x.kind]-3} 条</button>`;return ''}
+    const tools=(x.kind==='done'||x.kind==='ms')?`<span class="gt">${cnt[x.kind]>3?`<button data-fold="${esc(x.kind)}">${S.fold[x.kind]?'展开':'收起'}</button> · `:''}<button data-readall="${esc(x.kind)}">全部已读</button></span>`:'';
+    const g=x.kind!==last?`<div class="grp">${esc(k.grp)} <span class="gn">${cnt[x.kind]}</span>${tools}</div>`:'';last=x.kind;
     const sel=x.id===S.selInbox;
     const opts=(x.options||[]).map(o=>`<button class="opt" data-choice="${esc(o.key)}"><b>${esc(o.key)}</b>${esc(o.label)}${o.hint?`<small>${esc(o.hint)}</small>`:''}</button>`).join('');
     const err=S.errors[x.id]?`<div class="err">发送失败：${esc(S.errors[x.id])}</div>`:'';
@@ -176,18 +196,30 @@ function renderInbox(){
 }
 let toastTimer=null;
 function toast(msg,ms){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),ms||3000)}
+const NEXT_MSG={resumed:'已交给执行者，在原会话继续',accepted:'已记下',dismissed:'已放弃',read:'已读'};
 async function act(x,choice,text,row){
+  if(S.busy.has(x.id))return;S.busy.add(x.id);
+  if(row)row.style.pointerEvents='none';
   try{
     const d=await J('/api/inbox/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,choice:choice||null,text:text||null})});
     if(!d||d.ok===false)throw new Error((d&&d.error)||'操作未完成');
     S.acted.add(x.id);
     if(row){row.style.transition='opacity .4s';row.style.opacity='0'}
-    toast('已发给 GPT，继续中',3000);
+    const msg=d.next==='queued'?('已记下，'+(d.controller||'GPT')+' 下个检查点处理'):(NEXT_MSG[d.next]||'已处理');
+    toast(msg,3000);
     setTimeout(renderInbox,420);
   }catch(err){
+    S.busy.delete(x.id);if(row)row.style.pointerEvents='';
     const msg=err.message||'发送失败';S.errors[x.id]=msg;
     if(row){let e=row.querySelector('.err');if(!e){e=document.createElement('div');e.className='err';row.appendChild(e)}e.textContent='发送失败：'+msg}
   }
+}
+
+async function readAll(kind){
+  if(S.busy.has('readall'))return;S.busy.add('readall');
+  try{const d=await J('/api/inbox/read_all',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind})});
+    (S.inbox.items||[]).filter(y=>y.kind===kind).forEach(y=>S.acted.add(y.id));renderInbox();toast('已读 '+((d&&d.count)||0)+' 件',3000)}
+  catch(e){toast('没有成功：'+(e.message||''),4000)}finally{S.busy.delete('readall')}
 }
 
 /* ---------- task detail ---------- */
@@ -254,6 +286,9 @@ document.addEventListener('click',e=>{
   const cl=sel=>e.target.closest?e.target.closest(sel):null;
   const opt=cl('.opt');
   if(opt){const it=opt.closest('.it');if(!it)return;const x=(S.inbox.items||[]).find(y=>y.id===it.dataset.id);if(x)act(x,opt.dataset.choice,null,it);return}
+  const uf=cl('[data-unfold]');if(uf){S.fold[uf.dataset.unfold]=false;renderInbox();return}
+  const fd=cl('[data-fold]');if(fd){S.fold[fd.dataset.fold]=!S.fold[fd.dataset.fold];renderInbox();return}
+  const ra=cl('[data-readall]');if(ra){readAll(ra.dataset.readall);return}
   const it=cl('.it');
   if(it&&!cl('.opt')&&!cl('.say')){S.selInbox=it.dataset.id;renderInbox();return}
   const node=cl('[data-key]');

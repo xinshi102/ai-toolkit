@@ -1,5 +1,7 @@
 # ai-collab（个人版）
 
+**Mac：** 已安装本机 CLI 适配器与协作窗口时，按 [Mac 决策收件箱](references/macos.md) 操作。下方是 Windows 运行器用法。
+
 xinshi 下面的多 AI 协作子技能：主控 AI（GPT/Codex）把开发工作打成“工作包”，派给 DSH 等执行者，阻塞等待结果、按风险分级验收；再配一个本地只读看板。
 
 - 正文 `SKILL.md`；工作包格式、多包工作图、协作边界、看板、场景坑点见 `references/`；样例见 `examples/`。

@@ -92,10 +92,15 @@ sync_target() {  # sync_target <component> <canonical> <name> <kind> <path>
         failed=1
         return
       fi
-      if grep -qiE 'canonical|正本' "$target/SKILL.md"; then
+      if ! grep -qiE 'canonical|正本' "$target/SKILL.md"; then
+        echo "  pointer entry does not look like a redirect; review manually"
+        failed=1
+        return
+      fi
+      if grep -qF "$canonical/SKILL.md" "$target/SKILL.md"; then
         echo "  pointer entry intact; canonical skill not copied"
       else
-        echo "  pointer entry does not look like a redirect; review manually"
+        echo "  pointer does not reference canonical: $canonical/SKILL.md"
         failed=1
       fi
       ;;

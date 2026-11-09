@@ -13,6 +13,7 @@ if (-not (Test-Path (Join-Path $canonicalPath 'SKILL.md'))) {
 }
 
 $canonicalUrl = $canonicalPath -replace '\\', '/'
+$failed = $false
 
 $pointer = @"
 ---
@@ -20,7 +21,7 @@ name: xinshi
 description: 信使的任务入口：先判断环境与协作方式，单 harness 能做就自己做，需要时才用子 agent、跨 harness 或运行器；持续推进到必须由用户决定为止。
 ---
 
-Read the single canonical skill at ``$canonicalUrl/SKILL.md`` and follow it; reuse it if already loaded in this conversation.
+Read the single canonical skill at ``$canonicalUrl/SKILL.md`` and follow it. Resolve references relative to that canonical directory; reuse it if already loaded in this conversation.
 "@
 
 foreach ($root in $Roots) {
@@ -36,6 +37,7 @@ foreach ($root in $Roots) {
     }
     else {
       Write-Warning "refuse to overwrite non-pointer: $target"
+      $failed = $true
     }
     continue
   }
@@ -43,3 +45,5 @@ foreach ($root in $Roots) {
   Set-Content -LiteralPath (Join-Path $target 'SKILL.md') -Value $pointer -Encoding utf8
   Write-Output "installed: $target -> $canonicalPath"
 }
+
+if ($failed) { exit 1 }

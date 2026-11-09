@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
 
 import goal_loop
@@ -74,7 +75,27 @@ def summary_line(state):
             f"time={cost.get('wallSeconds', 0)}s {token_text} wake={(state['wake'] or {}).get('reason')}")
 
 
-def run_goal_file(goal_path, *, home, executor_kind="opencode"):
+def notify_state(state):
+    """Deliver a one-line macOS notification for completion or a decision."""
+    wake = state.get("wake") or {}
+    if state.get("status") == "done":
+        title, body = "信使：目标完成", state.get("objective", "")[:90]
+    elif wake:
+        title = "信使：需要你决定"
+        body = (wake.get("question") or state.get("objective", ""))[:120]
+    else:
+        return
+    def esc(value):
+        return str(value).replace("\\", "\\\\").replace('"', '\\"')
+    try:
+        subprocess.run(["osascript", "-e",
+                        'display notification "' + esc(body) + '" with title "' + esc(title) + '"'],
+                       check=False, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+
+def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True):
     goal = json.loads(Path(goal_path).read_text(encoding="utf-8"))
     goal = goal_loop.validate_goal(goal)
     if not goal.get("checks"):
@@ -87,6 +108,8 @@ def run_goal_file(goal_path, *, home, executor_kind="opencode"):
     if state.get("wake"):
         state["decisionPath"] = str(run_dir / "decision.md")
         (run_dir / "decision.md").write_text(decision_markdown(state), encoding="utf-8")
+    if notify:
+        notify_state(state)
     return state
 
 
@@ -101,12 +124,13 @@ def main():
     run = sub.add_parser("run")
     run.add_argument("goal", type=Path)
     run.add_argument("--home", type=Path, default=default_home)
+    run.add_argument("--no-notify", action="store_true")
     show_parser = sub.add_parser("show")
     show_parser.add_argument("run_id")
     show_parser.add_argument("--home", type=Path, default=default_home)
     args = parser.parse_args()
     if args.action == "run":
-        state = run_goal_file(args.goal, home=args.home)
+        state = run_goal_file(args.goal, home=args.home, notify=not args.no_notify)
         print(summary_line(state))
         print(f"report={state['reportPath']}")
         if state.get("decisionPath"):

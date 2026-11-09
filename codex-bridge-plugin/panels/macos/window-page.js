@@ -102,7 +102,8 @@ function renderOverview(data){
   const tree=el('nav',undefined,'console-tree');tree.setAttribute('aria-label','任务树');left.append(tree);
   const roots=el('ul');tree.append(roots);
   if(plan)link(left,'查看完整计划 →',()=>openView('plan'));
-  const itemCount=(data.inbox||[]).filter(x=>x.status==='pending').length;
+  const goalDecisions=(data.goals||[]).filter(x=>x.status==='blocked'&&x.wake);
+  const itemCount=(data.inbox||[]).filter(x=>x.status==='pending').length+goalDecisions.length;
   const inbox=section('需要你决定'+(itemCount?' · '+itemCount:''));
   if(data.inboxError)inbox.append(el('p','暂时无法读取决策收件箱。','overview-warn'));
   else {
@@ -133,6 +134,12 @@ function renderOverview(data){
       card.append(status);inbox.append(card);
     }
     if(items.length>6)inbox.append(el('p','还有 '+(items.length-6)+' 项，处理当前事项后会继续显示。','overview-note'));
+    for(const g of goalDecisions.slice(0,4)){
+      const card=el('article',undefined,'decision-card');
+      card.append(el('p',g.wake.question||g.objective));
+      card.append(el('p','目标 '+g.goalId+' · 原因 '+g.wake.reason+' · 在会话里回复 A/B','console-meta'));
+      inbox.append(card);
+    }
   }
 
   if(data.errors?.length||data.ok===false)right.append(el('p','部分记录无法读取。','overview-warn'));
@@ -177,7 +184,8 @@ function renderGoals(data){
     const card=el('article',undefined,'cli-run bubble');
     card.append(el('div',g.objective||g.goalId));
     const cost=g.cost||{};const tokens=cost.tokens?cost.tokens.total:0;
-    card.append(el('div',(labels[g.status]||g.status)+' · '+(g.attempts||0)+' 次 · '+(cost.wallSeconds||0)+'s · '+(tokens||0)+' tok'+(g.wake?' · 原因 '+g.wake:''),'console-meta'));
+    card.append(el('div',(labels[g.status]||g.status)+' · '+(g.attempts||0)+' 次 · '+(cost.wallSeconds||0)+'s · '+(tokens||0)+' tok'+(g.wake?' · 原因 '+(g.wake.reason||g.wake):''),'console-meta'));
+    if(g.wake&&g.wake.question)card.append(el('p',g.wake.question,'detail-note'));
     controlPane.append(card);
   }
 }

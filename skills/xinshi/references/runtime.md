@@ -15,6 +15,7 @@
 - 接口、工作包、修订和恢复以本机所用运行器的 `WORKFLOWS.md` 为准。
 
 - v4 本机目标循环：`python3 collaboration/macos/goal_runner.py run <goal.json>`；每次尝试记录执行/判断耗时与 token，完成后写 `report.md`、阻塞时写 `decision.md`，并同步到协作面板。
+- 多里程碑长任务：`python3 collaboration/macos/xinshi.py batch <plan.json>`，按顺序跑完才汇报；上一个里程碑的产物会作为下一段上下文，遇决定才停。
 
 ## 不用运行器的情况
 普通任务、或者原生子 agent 就够用时，不进队列。运行器只负责执行图，不替你理解需求。

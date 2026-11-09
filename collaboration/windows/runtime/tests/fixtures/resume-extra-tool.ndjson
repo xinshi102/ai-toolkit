@@ -1,0 +1,2 @@
+{"type": "system", "subtype": "init", "session_id": "synthetic-session", "tools": ["Read", "Bash", "SkillManage"], "mcp_servers": [], "__timestamp": "first"}
+{"type": "result", "subtype": "success", "session_id": "synthetic-session", "is_error": false, "permission_denials": [], "result": "{\"ok\":true}"}

@@ -21,7 +21,8 @@
     }
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test test/*.test.js",
+    "test:bridge-integration": "node bridge-mcp/test/stdio-smoke.mjs"
   },
   "files": [
     "lib",

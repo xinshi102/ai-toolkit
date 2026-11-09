@@ -1,8 +1,11 @@
+import {winConsoleRoute} from "./win-console-routes.js";
 import { appendFile, mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { collaborationWindowHtml } from "./window-page.js";
+import { collaborationControl } from "./control-data.js";
+import {decisionRequest,decisionRequestAllowed} from "./decision-http.js";
 
 export const name = "@local/dsh-codex-bridge";
 export const inject = ["webServer", "sessionController"];
@@ -448,18 +451,45 @@ export function createBridge({ root = DEFAULT_ROOT, now = () => new Date(), disp
   return { status, authorize, close, message, messages, update, retry };
 }
 
+export function shouldPublishDiscovery(argv = process.argv) {
+  const profile = (name) => argv.some((argument, index) => argument === `--profile=${name}` || (argument === "--profile" && argv[index + 1] === name));
+  if (profile("headless")) return false;
+  return profile("web") || argv.some((argument) => String(argument).replaceAll("\\", "/").endsWith("/dsh-desktop-host/lib/index.js"));
+}
+
+export function collaborationCommand(input) {
+  if (!["Codex", "DSH", "DeepSeek"].includes(input.recipient)) return null;
+  const recipient = input.recipient === "DSH" ? "DeepSeek" : input.recipient;
+  return { ...input, sender: "信使", kind: "command", recipient,
+    direction: recipient === "Codex" ? "deepseek-to-codex" : "codex-to-deepseek" };
+}
+
 export function apply(ctx, config = {}) {
   const root = cleanText(config.root, 1000) || DEFAULT_ROOT;
   const discoveryFile = path.join(DISCOVERY_ROOT, "bridge-server.json");
   const discoveryTemp = `${discoveryFile}.${process.pid}.tmp`;
   const serverHost = ["127.0.0.1", "localhost", "::1"].includes(ctx.webServer.host) ? ctx.webServer.host : "127.0.0.1";
   const discovery = JSON.stringify({ version: 1, host: serverHost, port: ctx.webServer.port, pid: process.pid, updatedAt: new Date().toISOString() });
-  ctx.effect(() => {
+  if (shouldPublishDiscovery()) ctx.effect(() => {
+    let disposed = false;
     void mkdir(path.dirname(discoveryFile), { recursive: true })
       .then(() => writeFile(discoveryTemp, `${discovery}\n`, { mode: 0o600 }))
-      .then(() => rename(discoveryTemp, discoveryFile))
+      .then(async () => {
+        if (disposed) {
+          await unlink(discoveryTemp).catch(() => {});
+          return;
+        }
+        await rename(discoveryTemp, discoveryFile);
+        // Disposal may occur while the asynchronous rename is pending.
+        if (disposed) {
+          await readFile(discoveryFile, "utf8").then(async (contents) => {
+            if (contents.trim() === discovery) await unlink(discoveryFile);
+          }).catch(() => {});
+        }
+      })
       .catch((error) => ctx.logger?.warn?.("codex bridge discovery publication failed", error));
     return () => {
+      disposed = true;
       void readFile(discoveryFile, "utf8").then(async (contents) => {
         if (JSON.parse(contents).pid === process.pid) await unlink(discoveryFile);
       }).catch(() => {});
@@ -580,9 +610,25 @@ export function apply(ctx, config = {}) {
       }
       const pathname = new URL(req.url, "http://127.0.0.1").pathname;
       try {
-        if (req.method === "GET" && pathname === "/codex-collab/window") {
+        if (await winConsoleRoute(req, res, pathname, ctx.webServer.port, config, bodyJson)) return;
+        if (req.method === "GET" && pathname === "/codex-collab/legacy-window") {
           res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
           return res.end(collaborationWindowHtml());
+        }
+        if (req.method === "GET" && pathname === "/codex-collab/control") {
+          return json(res, 200, await collaborationControl(config));
+        }
+        if ((req.method === "GET" && pathname === "/codex-collab/inbox") ||
+            (req.method === "POST" && pathname === "/codex-collab/inbox/answer")) {
+          if (!decisionRequestAllowed(req, ctx.webServer.port)) return json(res, 403, { ok:false, error:"INBOX_ORIGIN_REQUIRED" });
+          let payload = {};
+          if (req.method === "POST") {
+            try { payload = await bodyJson(req); }
+            catch { return json(res, 400, { ok:false, error:"INVALID_ANSWER" }); }
+            if (JSON.stringify(payload).length > 4096) return json(res, 413, { ok:false, error:"ANSWER_TOO_LARGE" });
+          }
+          const value = await decisionRequest(config, req.method === "GET" ? "list" : "answer", payload);
+          return json(res, value.status && typeof value.status === "number" ? value.status : 200, value);
         }
         if (req.method === "GET" && pathname === "/codex-collab/window-data") {
           const sessionId = new URL(req.url, "http://127.0.0.1").searchParams.get("sessionId");
@@ -605,6 +651,18 @@ export function apply(ctx, config = {}) {
         if (req.method === "GET" && pathname === "/codex-collab/network") {
           const network = await codexNetworkStatus();
           return json(res, 200, { ok: true, ...network });
+        }
+        if (req.method === "POST" && pathname === "/codex-collab/command") {
+          const origin = req.headers?.origin;
+          if (origin && !new Set([
+            `http://127.0.0.1:${ctx.webServer.port}`,
+            `http://localhost:${ctx.webServer.port}`,
+            `http://[::1]:${ctx.webServer.port}`,
+          ]).has(origin)) return json(res, 403, { ok: false, error: "ORIGIN_NOT_ALLOWED" });
+          const input = collaborationCommand(await bodyJson(req));
+          if (!input) return json(res, 400, { ok: false, error: "INVALID_COMMAND_RECIPIENT" });
+          const result = await bridge.message(input);
+          return json(res, result.status, result.value);
         }
         if (req.method === "POST" && pathname === "/codex-collab/message") {
           const input = await bodyJson(req);

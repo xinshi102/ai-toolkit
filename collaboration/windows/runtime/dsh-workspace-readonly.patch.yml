@@ -1,0 +1,32 @@
+# Fixed single-invocation overlay: read-only project inspection.
+# The adapter selects this file for permission=read-only. Every known preset is
+# pinned to read-only/never so a stale saved preset cannot widen the run.
+- id: sandbox-policy
+  config:
+    mode: read-only
+    workspaceRoot: !!js process.cwd()
+- id: approval
+  config:
+    policy: never
+- id: tools
+  config:
+    mode: native
+- id: permission
+  config:
+    defaultPreset: read-only
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: never
+      workspace-write:
+        sandbox: read-only
+        approval: never
+      danger-full-access:
+        sandbox: read-only
+        approval: never
+- insert:
+    - id: runtime-dsh-workspace-audit
+      name: __XINSHI_PLUGIN_PATH__
+      inject: [sandboxPolicy, approval]
+- id: headless-runner
+  inject: [headlessStartup, runtimeDshWorkspaceAudit]

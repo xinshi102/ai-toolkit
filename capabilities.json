@@ -201,7 +201,7 @@
     {
       "name": "xinshi-collaboration-windows",
       "kind": "runtime",
-      "path": "skills/ai-collab",
+      "path": "collaboration/windows",
       "origin": "personal",
       "platforms": [
         "windows"

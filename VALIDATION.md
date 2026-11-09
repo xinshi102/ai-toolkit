@@ -9,17 +9,6 @@
 
 范围：源码、离线测试与隔离构建。不代表所有AI/目标设备已安装、真实GUI已重载或模型对话效果已验证。Master Plan草稿单独保留，不宣称可运行。
 
-## 2026-10-21 本地 token 计量
-
-- `token_meter.py` 在本机 Codex 会话日志上实测：近 5h 50 次、6.46M input / 6.02M cached / 35.8k output，5h 22%、周 19%；与同一日志直接解析的数值一致。
-- `test_token_meter.py` 4/4 通过；完整 runtime 套件（含新测）待本轮重跑。
-
-## 2026-10-20 事件门禁与预算
-
-- `skills/ai-collab/runtime` 新增 `events.py` / `state.py` / `gate.py` / `budget.py`；离线单测 `test_collab_events.py` 11/11 通过，完整 runtime 套件 95/95 通过。
-- CLI 冒烟：`events.py emit` -> `gate.py --once --dry-run` 产出 gate2 快照（<=4 KiB，payload 去除 stdout）-> `budget.py charge` 正常。
-- 未验收：真实控制器唤醒（未消耗额度）、跨机 broker、并行事件顺序压力；这些按需在目标机单独验证。
-
 ## 2026-10-15 Plan Map 0.6.0 / DSH 0.1.1
 
 - Codex 适配器本机 `node --test "acceptance/*.test.js"` 23/23 通过：存储与并发写入、真实 MCP 初始化与工具发现、内嵌视图、视口适配、计划解析、历史与宿主待办桥接。
@@ -29,6 +18,7 @@
 ## 2026-10-19 xinshi 3.0.0-trial.2
 
 - DSH 技能目录显示 `xinshi`；Codex CLI（`codex exec`）会话内技能列表包含 `xinshi`（22 项，含 plan-map、knowledge-vault）。
+- CodeBuddy/WorkBuddy/Box/Kimi 的目录已改名并写入指针，但未做会话内加载确认。
 - 安装脚本：Windows 临时目录试装通过；bash 脚本只做 `bash -n` 语法检查，未在 macOS 实跑。
 
 ## 2026-10-19 xinshi 3.0.0-trial.1

@@ -1,0 +1,25 @@
+- id: sandbox-policy
+  config:
+    mode: read-only
+- id: approval
+  config:
+    policy: never
+- id: permission
+  config:
+    defaultPreset: read-only
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: never
+      workspace-write:
+        sandbox: read-only
+        approval: never
+      danger-full-access:
+        sandbox: read-only
+        approval: never
+- insert:
+    - id: runtime-dsh-text-guard
+      name: __XINSHI_PLUGIN_PATH__
+      inject: [tools, sandboxPolicy, approval]
+- id: headless-runner
+  inject: [headlessStartup, runtimeDshTextGuard]

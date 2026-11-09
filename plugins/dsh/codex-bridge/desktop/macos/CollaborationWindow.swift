@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     private let discoveryURL = URL(fileURLWithPath: NSHomeDirectory())
         .appendingPathComponent("Library/Application Support/com.xinshi.deepseek-codex-window/bridge-server.json")
     private var retryTimer: Timer?
+    private var loadedServiceURL: URL?
+    private var showingWaitingPage = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let configuration = WKWebViewConfiguration()
@@ -30,6 +32,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         loadWindow()
+        // Keep watching discovery after success: DSH may restart on a new port.
+        retryTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            self?.loadWindow()
+        }
     }
 
     private func loadWindow() {
@@ -42,25 +48,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
             showWaitingPage()
             return
         }
-        retryTimer?.invalidate()
-        retryTimer = nil
+        guard url != loadedServiceURL || showingWaitingPage else { return }
+        loadedServiceURL = url
+        showingWaitingPage = false
         webView.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10))
     }
 
     private func showWaitingPage() {
+        loadedServiceURL = nil
+        guard !showingWaitingPage else { return }
+        showingWaitingPage = true
         webView.loadHTMLString("""
         <!doctype html><meta charset="utf-8"><style>body{font-family:-apple-system;padding:40px;background:#f3f5f8;color:#111827}main{max-width:520px;margin:80px auto;background:white;padding:28px;border-radius:16px;box-shadow:0 12px 35px #0002}button{padding:9px 14px;border:0;border-radius:9px;background:#2563eb;color:white;font-size:14px;cursor:pointer}</style><main><h2>正在等待 DeepSeek Harness</h2><p id="reason">未找到有效的本机协作服务地址。请确认 DSH 桌面端已启动。</p><button onclick="location.reload()">重试连接</button><p>窗口也会每 2 秒自动重试。</p></main>
         """, baseURL: nil)
-        if retryTimer == nil {
-            retryTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-                self?.loadWindow()
-            }
-        }
+
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         showWaitingPage()
     }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if let url = webView.url, ["127.0.0.1", "localhost", "::1"].contains(url.host ?? ""), let port = url.port {
+            let message = "collaboration-window: rendered local service port \(port)\n"
+            FileHandle.standardError.write(Data(message.utf8))
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) { retryTimer?.invalidate() }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 }

@@ -1,0 +1,2 @@
+{"type": "system", "subtype": "init", "session_id": "synthetic-session", "tools": ["Read", "Glob", "Grep"], "mcp_servers": [], "__timestamp": "first"}
+{"type": "result", "subtype": "error_during_execution", "session_id": "synthetic-session", "is_error": true, "permission_denials": [], "result": "", "errors": ["Authentication required. Use native login."]}

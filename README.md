@@ -6,8 +6,6 @@
 
 **给接手同步的 AI：先读本页，再读 [能力清单](CAPABILITIES.md) 或 [机器可读目录](capabilities.json)，最后只读选中组件的说明。不要默认安装全部内容。**
 
->
-
 ## 1. 识别本机与任务
 
 确认用户需要解决的问题、已有能力，以及本机的系统（macOS / Windows / Linux）、AI宿主及版本（Codex / DSH / Hermes / OpenCode / 网页聊天）、文件与安装权限、实际Skill目录、插件/MCP接口和Node.js/Python等依赖。
@@ -28,7 +26,7 @@
 | 监督Hermes执行 | [supervise-hermes](skills/supervise-hermes/SKILL.md) | 需本机隔离Worker，复制Skill不等于可调度 |
 | 持久计划与导图 | [Plan Map](plan-map/README.md) | DSH用插件版，Codex用Skill/MCP版；其他宿主先确认MCP与UI支持 |
 | DSH搜索、上下文、通知、管理 | [DSH插件清单](CAPABILITIES.md)与 `plugins/dsh/<组件>/` | 对应DSH版本和插件接口，密钥本机单独配置 |
-| 多 AI 协作（派工作包、阻塞等待、分级验收、本地看板） | [ai-collab](skills/ai-collab/README.md) | Windows、Python 3.10+ 标准库；执行者 DSH / Codex |
+| 多线程任务依赖、持久队列与结果验收 | [xinshi 协作运行器（Windows 版）](collaboration/windows/README.md) | Windows、Python 3.10+，原生执行器另装；非全平台安装包 |
 | 多AI桥接 | [codex-bridge](plugins/dsh/codex-bridge/README.md)、[opencode-bridge MCP](mcp/opencode-bridge/README.md) | 可运行的本机桥服务与明确授权的会话 |
 | 工作区与产物治理 | [ai-workspace-manager](skills/ai-workspace-manager/SKILL.md)、[管理工具](tools/workspace-manager/README.md) | 为目标设备建立自己的目录与状态 |
 

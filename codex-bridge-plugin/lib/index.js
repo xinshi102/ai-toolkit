@@ -1,9 +1,9 @@
-import {winConsoleRoute} from "./win-console-routes.js";
+import {winConsoleRoute} from "../panels/windows/win-console-routes.js";
 import { appendFile, mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { collaborationWindowHtml } from "./window-page.js";
+import { collaborationWindowHtml } from "../panels/macos/window-page.js";
 import { collaborationControl } from "./control-data.js";
 import {decisionRequest,decisionRequestAllowed} from "./decision-http.js";
 

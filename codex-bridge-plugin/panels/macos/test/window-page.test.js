@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { collaborationWindowHtml } from '../lib/window-page.js';
+import { collaborationWindowHtml } from '../window-page.js';
 
 function harness(){
   class Element {

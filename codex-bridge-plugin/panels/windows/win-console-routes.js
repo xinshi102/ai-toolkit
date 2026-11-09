@@ -1,11 +1,11 @@
 import {spawn} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {decisionRequest,decisionRequestAllowed} from './decision-http.js';
+import {decisionRequest,decisionRequestAllowed} from '../../lib/decision-http.js';
 import {consoleTree,consoleRun,consoleFile,consoleRunFolder,consoleQuota} from './win-console-data.js';
 import {consoleState,saveConsoleLayout,markMilestones,setRunPlacement,setRunArchived} from './win-console-state.js';
 
-const dir=new URL('./win-console/',import.meta.url);
+const dir=new URL('./console/',import.meta.url);
 const base='/codex-collab/win-api';
 const reply=(res,code,data)=>{res.writeHead(code,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(data))};
 const milestoneId=n=>'ms.'+n.key;

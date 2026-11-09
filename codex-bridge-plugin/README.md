@@ -4,6 +4,15 @@
 维护与最终验收：Codex  
 通信对端：DeepSeek Harness
 
+## 目录
+
+- `lib/`：共享层——插件入口、client、控制数据、决策 HTTP 与存储。
+- `panels/macos/`：Mac 面板——`window-page.js`、`desktop/` 原生窗口源码、`test/`。
+- `panels/windows/`：Windows 面板——`console/` 控制台页面、`win-console-*.js` 路由/数据/状态。
+- `test/`：共享层测试；`bridge-mcp/`：MCP 侧桥接。
+
+Mac 与 Windows 面板分开维护、互不引用；共享行为只放 `lib/`。
+
 ## 用户看到什么
 
 打开 DeepSeek Harness，点击插件坞中的 `⇄ Codex 协作入口`：

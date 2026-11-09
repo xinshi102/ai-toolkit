@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { collaborationControl } from '../lib/control-data.js';
-import { collaborationWindowHtml } from '../lib/window-page.js';
+import { collaborationWindowHtml } from '../panels/macos/window-page.js';
 async function fixture(t){const home=await mkdtemp(path.join(os.tmpdir(),'control-'));t.after(()=>rm(home,{recursive:true,force:true}));const plans=path.join(home,'plans');await mkdir(plans);await writeFile(path.join(plans,'public.json'),JSON.stringify({planId:'public',title:'Shared',revision:4,state:{nodes:{root:{id:'root',title:'Parent',status:'done'},leaf:{id:'leaf',parent:'root',title:'Child',status:'pending'}},order:['root','leaf']}}));await writeFile(path.join(home,'control.json'),JSON.stringify({schemaVersion:1,activePlanId:'public',allowedPlanIds:['public'],planMapHome:plans}));return home}
 async function run(home,id,extra={}){const dir=path.join(home,'runs',id);await mkdir(dir,{recursive:true});await writeFile(path.join(dir,'run.json'),JSON.stringify({runId:id,planId:'public',nodeId:'leaf',harness:'OpenCode',model:'free',status:'awaiting_acceptance',receipt:{accepted:true},acceptance:{status:'pending'},command:{argv:['opencode','run'],stdin:'<img onerror=bad()>',cwd:'/tmp'},response:'real response',updatedAt:id,...extra}));return dir}
 test('missing registry returns empty without reading plans',async t=>{const home=await mkdtemp(path.join(os.tmpdir(),'empty-'));t.after(()=>rm(home,{recursive:true,force:true}));assert.equal((await collaborationControl({collaborationHome:home})).available,false)});

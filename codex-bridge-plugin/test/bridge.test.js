@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { apply, buildDeliveryPrompt, createBridge } from "../lib/index.js";
-import { collaborationWindowHtml, selectCollaborationSession } from "../lib/window-page.js";
+import { collaborationWindowHtml, selectCollaborationSession } from "../panels/macos/window-page.js";
 
 test("automatically authorizes new sessions and saves their Harness binding", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "dsh-bridge-"));

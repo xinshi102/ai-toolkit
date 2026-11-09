@@ -12,6 +12,7 @@ BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE.parent / 'windows/runtime'))
 sys.path.insert(0, str(BASE))
 from opencode_adapter import SHARED_LOADER
+import launch_guard
 
 
 def filename(value):
@@ -25,6 +26,9 @@ def run(directory: Path, brief_filename: str, output_filename: str, timeout=180,
         raise ValueError('Invalid DSH session identifier')
     directory = directory.resolve(strict=True)
     brief_filename, output_filename = filename(brief_filename), filename(output_filename)
+    # Launch-path gate: direct adapter use must not bypass the coordinator's rules.
+    launch_guard.check('dsh', model='DeepSeek-Flash', timeout=timeout, directory=directory,
+                       brief=brief_filename, output=output_filename)
     evidence_dir = directory if evidence_dir is None else evidence_dir.resolve(strict=True)
     target = directory / output_filename
     briefpath = directory / brief_filename

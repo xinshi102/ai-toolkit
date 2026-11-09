@@ -23,6 +23,7 @@ python3 -B collaboration/macos/workflow.py --project-root /absolute/projects/exa
 - 写范围冲突比较使用 Unicode NFD 和大小写折叠，防止默认 APFS 上 `Src` / `sRC` 或组合字符别名被并发写入。在区分大小写的卷上可能保守串行，这是可接受的调度代价。
 - CodeBuddy 在 Mac 从 PATH 寻找 `node`，仍允许显式指定 Node 路径；保留 2.169.0 版本审计门禁。本机未安装 CodeBuddy，不能声称可用。
 - Mac 入口复用现有 POSIX 文件锁和独立进程组。没有引入新后台服务、额外队列或桥接层。
+- 启动前门禁集中到 `launch_guard.py`：两个适配器在 spawn 前复核 harness/模型/超时/目录，coordinator 的 manifest 校验复用同一套规则；单元测试证明被拒时不会调用 `subprocess`。
 
 ## 与旧方案的关系
 

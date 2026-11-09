@@ -15,6 +15,8 @@ import re
 import shutil
 import uuid
 
+import launch_guard
+
 HOME = Path.home() / 'Library/Application Support/xinshi-collaboration'
 PLAN_HOME = Path.home() / '.codex/plan-map'
 FREE_MODEL = 'opencode/deepseek-v4.1-flash-free'
@@ -99,10 +101,8 @@ def validate_task(home, task):
         raise ValueError('only explicitly public or synthetic task packages are supported')
     if task.get('harness') not in ('opencode', 'dsh'):
         raise ValueError('only OpenCode and DSH are enabled; no silent fallback')
-    if task['harness'] == 'opencode' and task.get('model', FREE_MODEL) != FREE_MODEL:
-        raise ValueError('this routing profile permits only the verified free model')
-    if task['harness'] == 'dsh' and task.get('model', 'DeepSeek-Flash') not in ('DeepSeek-Flash', 'deepseek-official/deepseek-flash'):
-        raise ValueError('this routing profile permits only explicitly selected DSH Flash')
+    model = task.get('model', FREE_MODEL if task['harness'] == 'opencode' else 'DeepSeek-Flash')
+    launch_guard.check_model(task['harness'], model)
     if not isinstance(task.get('title'), str) or not task['title'].strip():
         raise ValueError('task title is required')
     brief = task.get('brief')
@@ -112,9 +112,7 @@ def validate_task(home, task):
         raise ValueError('explicit artifact keys are required')
     if len(json.dumps(brief, ensure_ascii=False)) > 24000:
         raise ValueError('task input exceeds bound')
-    timeout = task.get('timeoutSeconds', 180)
-    if type(timeout) is not int or not 1 <= timeout <= 300:
-        raise ValueError('timeout must be 1..300 seconds')
+    launch_guard.check_timeout(task.get('timeoutSeconds', 180))
     return task
 
 

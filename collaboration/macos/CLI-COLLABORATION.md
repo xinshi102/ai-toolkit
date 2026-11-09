@@ -45,6 +45,18 @@ DSH入口 dsh_adapter.py 复用固定权限overlay和原生日志审计。OpenCo
 本次真实免费模型写出的事件整理模块为 event_view.py；首个版本的元数据限长失败和一次模型修复均保留。DSH Flash通过CLI做方案独立复核。证据在本目录 acceptance/，未上传到GitHub。
 
 
+### 启动前门禁
+
+manifest 校验不是最后一道闸门：`opencode_adapter.py` 与 `dsh_adapter.py` 在真正启动子进程前调用 `launch_guard.check`，直接调用适配器（不经 `cli_coordinator.py`）同样会被拦。当前拦截：
+
+- harness 只允许 `opencode` / `dsh`；
+- 模型白名单：OpenCode 只允许 `opencode/deepseek-v4.1-flash-free`，共享路由仅在显式 `--shared-deepseek` 时允许 `deepseek/deepseek-flash`；DSH 只允许 Flash；
+- 超时必须是 1–300 的整数；
+- 工作目录必须真实存在，且不能是 HOME 或根目录；
+- brief 与产物必须是普通文件名、彼此不同。
+
+任一不满足即抛 `LaunchDenied`（`ValueError` 子类），不产生子进程、不写日志。这是应用层门禁，不是 OS 隔离。
+
 ## 决策收件箱（Mac 已验收：DSH 同会话）
 
 以下由主控操作；用户只需在协作窗口「总览 → 需要你决定」选一项。计划必须已绑定，问题绑定原 DSH CLI 工作包及同一任务节点。每个问题有独立 ID 和有效期。浏览器只可列出当前计划和回答，不能续跑或验收；数据由本机 SQLite 事务保存。

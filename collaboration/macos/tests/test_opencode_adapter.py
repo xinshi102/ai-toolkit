@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 import tempfile
@@ -79,6 +80,18 @@ class ScopedConfigTests(unittest.TestCase):
         for directory, name in [(Path('/tmp/scoped'), '*.json'), (Path('/tmp/scoped'), 'b?.json'), (Path('/tmp/scope*'), 'brief.json')]:
             with self.assertRaises(ValueError):
                 mod.scoped_config(directory, name, 'result.json')
+
+    def test_launch_gate_blocks_before_any_subprocess(self):
+        free = 'opencode/deepseek-v4.1-flash-free'
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root)
+            (directory / 'brief.json').write_text(json.dumps({'nonce': 'n', 'required_keys': ['nonce']}))
+            with mock.patch('subprocess.run') as spawn:
+                for kwargs in ({'model': 'paid/model'}, {'model': free, 'timeout': 0},
+                               {'model': free, 'timeout': 301}, {'model': free, 'prefix': '../escape'}):
+                    with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                        mod.run(directory, **kwargs)
+                spawn.assert_not_called()
 
     def test_path_permissions_and_external_tools(self):
         config = mod.scoped_config(Path('/tmp/synthetic'), 'brief.json', 'result.json')

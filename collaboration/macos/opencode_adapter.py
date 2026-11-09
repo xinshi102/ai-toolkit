@@ -7,6 +7,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import launch_guard
+
 
 def scoped_config(directory: Path, brief: str, output: str) -> dict:
     # OpenCode matches paths relative to its detected project root, which can be
@@ -89,6 +91,9 @@ def provider_config(config: dict, shared_deepseek: bool) -> dict:
 def run(directory: Path, model: str, prefix: str = 'opencode', timeout: int = 180, shared_deepseek: bool = False, on_command=None) -> dict:
     directory = directory.resolve(strict=True)
     brief, output = prefix + '-brief.json', prefix + '-design.json'
+    # Launch-path gate: direct adapter use must not bypass the coordinator's rules.
+    launch_guard.check('opencode', model=model, timeout=timeout, directory=directory,
+                       brief=brief, output=output, shared_deepseek=shared_deepseek)
     if shared_deepseek and not model.startswith('deepseek/'):
         raise ValueError('Shared DeepSeek route requires a deepseek/ model')
     config = provider_config(scoped_config(directory, brief, output), shared_deepseek)

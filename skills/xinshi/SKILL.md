@@ -3,7 +3,7 @@ name: xinshi
 description: 信使的任务入口：先判断环境与协作方式，单 harness 能做就自己做，需要时才用子 agent、跨 harness 或运行器；持续推进到必须由用户决定为止。
 metadata:
   version: "3.1.4"
-  local_revision: "mac.5"
+  local_revision: "mac.6"
 ---
 
 # 信使
@@ -65,13 +65,14 @@ metadata:
   A. …（后果）   B. …（后果）
   建议：A，因为…   回复 A / B 即可
   ```
-- **主控负责决定闭环**：每个问题有独立决定编号，回答只适用于当次明确操作。Mac 已验收的 DSH CLI 决定可从面板接收：用户答完后在会话里回一句话，主控下一轮先 `decision_cli.py list`，有 pending 就 `show`/`resume`，验收后 `close`；没有常驻唤醒，不轮询。其他任务在聊天里收决定。重复、过期、恢复及验收见 [决策与续做](references/decisions.md)。
+- **主控负责决定闭环**：每个问题有独立决定编号，回答只适用于当次明确操作。面板侧已验收的 DSH 决定可从面板接收（本机 CLI 目录没有记录时按聊天接力）：用户答完后在会话里回一句话，主控下一轮先 `decision_cli.py list`，有 pending 就 `show`/`resume`，验收后 `close`；没有常驻唤醒，不轮询。其他任务在聊天里收决定。重复、过期、恢复及验收见 [决策与续做](references/decisions.md)。
 - **主动汇报**只在大阶段整体完成时发一条：完成了什么、笔记和证据在哪、上线还需用户确认什么。里程碑通过验收后再把对应计划节点标 done；面板是否显示里程碑以当前运行器支持为准。
 - **防搞砸**：会写数据的里程碑开始前留回滚点，并先验证回滚路径可用；备份位置写进笔记。
 - 用户口令：「进度」3 行内说清做到哪、下一步；「讲讲 X」按笔记讲解其中的技术点；「改需求：…」；「暂停」/「继续」。
 
 ## 7. 状态与沉淀
 - 项目 `STATE.md` 只写“当前任务 / 下一步 / 挂起项”，不超过 40 行；历史移到 `STATE-history.md`。
+- **goal 归属**：宿主原生 goal/计划是单会话内的权威；跨 harness 时以项目里的可移植目标文件（目标、验收标准、预算）为准，各宿主的 goal 只做投影，不双写、不互相覆盖。
 - 跨 harness 交接才写共享 `.work/handoff/`（见 references/coordination.md）。
 - 值得复用的经验：项目内写进 `AGENTS.md`，跨项目写进已确认的本机经验库；未配置时先留在项目内（见 references/learning.md）。不另建事件台账。
 - 特定场景（部署、Windows 桌面/Unity、跨渠道成本对比、宿主自升级）开工前，读 references/pitfalls.md 对应小节。

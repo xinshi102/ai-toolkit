@@ -14,7 +14,7 @@ from pathlib import Path
 
 import goal_loop
 from goal_executor_opencode import executor_for
-from goal_judge import command_judge
+from goal_judge import hybrid_judge
 
 DECISION_DEFAULTS = {
     "budget_exhausted": ["A. 追加预算继续", "B. 停止并交付现状"],
@@ -98,10 +98,10 @@ def notify_state(state):
 def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True):
     goal = json.loads(Path(goal_path).read_text(encoding="utf-8"))
     goal = goal_loop.validate_goal(goal)
-    if not goal.get("checks"):
-        raise goal_loop.GoalError("goal requires at least one executable check")
+    if not goal.get("checks") and not goal.get("subjective"):
+        raise goal_loop.GoalError("goal requires executable checks or subjective criteria")
     executor = executor_for(goal)
-    state = goal_loop.run_goal(goal, executor=executor, judge=command_judge(goal), home=home)
+    state = goal_loop.run_goal(goal, executor=executor, judge=hybrid_judge(goal), home=home)
     run_dir = Path(home) / "goals" / state["runId"]
     state["reportPath"] = str(run_dir / "report.md")
     (run_dir / "report.md").write_text(report_markdown(state), encoding="utf-8")

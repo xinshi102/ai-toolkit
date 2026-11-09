@@ -20,6 +20,7 @@ TASK = """Convert the user's request into ONE goal JSON object with exactly thes
 goalId (kebab-case), objective (one sentence), acceptance (3-7 verifiable Chinese strings),
 checks (list of {"desc": Chinese label, "command": a shell command run inside the attempt
 workspace that exits 0 only when the acceptance item holds; use python3 -c reading artifact files}),
+subjective (optional list of Chinese criteria that need a judge model, e.g. 视觉是否清晰；empty if all checks are mechanical),
 budget ({"attempts": 1-5, "maxSeconds": 120-1800}),
 artifact (a plain filename the executor must produce, e.g. hello.json; checks read this file),
 required_keys (list of artifact JSON keys the executor must write, for example ["nonce","ok"];
@@ -42,6 +43,7 @@ def skeleton(request):
         "objective": request.strip(),
         "acceptance": ["（待补）明确 3-7 条可验证的验收项"],
         "checks": [],
+        "subjective": [],
         "artifact": "goal-design.json",
         "budget": {"attempts": 3, "maxSeconds": 900},
         "required_keys": ["nonce", "result"],
@@ -67,6 +69,7 @@ def normalize(data, request):
         "objective": str(data.get("objective") or request.strip()),
         "acceptance": acceptance or [request.strip()],
         "checks": checks,
+        "subjective": [str(item) for item in (data.get("subjective") or []) if str(item).strip()],
         "budget": {"attempts": attempts, "maxSeconds": seconds},
         "artifact": str(data.get("artifact") or "goal-design.json"),
         "required_keys": [str(key) for key in (data.get("required_keys") or ["nonce", "result"])],
@@ -79,7 +82,7 @@ def draft(request, *, model=FREE_MODEL, timeout=120):
         directory = Path(root)
         brief = {
             "nonce": uuid.uuid4().hex,
-            "required_keys": ["goalId", "objective", "acceptance", "checks", "budget", "artifact"],
+            "required_keys": ["goalId", "objective", "acceptance", "checks", "subjective", "budget", "artifact"],
             "task": TASK + "\n用户请求：" + request.strip(),
         }
         (directory / "draft-brief.json").write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")

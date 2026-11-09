@@ -1,13 +1,26 @@
-"""Deterministic judge for the v4 goal loop.
+"""Judges for the v4 goal loop.
 
-Checks are shell commands run inside the attempt workspace. They are the
-"code" half of the hybrid judge: cheap, reproducible, and independent of the
-executor's self-report. A subjective/agent judge can be added on top later.
+Two layers:
+- command_judge: deterministic shell checks (cheap, reproducible).
+- agent_judge: an independent model judge for subjective acceptance
+  (pages, copy, design). It only sees the acceptance criteria and the
+  artifact copied into its own directory, never the executor's self-report.
+
+hybrid_judge runs the deterministic layer first and only escalates to the
+agent when the checks pass and the goal declares subjective criteria.
 """
 from __future__ import annotations
 
+import json
+import shutil
 import subprocess
+import tempfile
+import uuid
 from pathlib import Path
+
+import opencode_adapter
+
+FREE_MODEL = "opencode/deepseek-v4.1-flash-free"
 
 
 def command_judge(goal):
@@ -34,5 +47,68 @@ def command_judge(goal):
                 tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-3:]
                 defects.append(f"{label}: exit {proc.returncode} :: {' | '.join(tail)}")
         return {"verdict": "pass", "defects": []} if not defects else {"verdict": "reject", "defects": defects}
+
+    return judge
+
+
+def agent_judge(goal, *, model=FREE_MODEL, timeout=120):
+    criteria = goal.get("subjective") or []
+    acceptance = goal.get("acceptance") or []
+
+    def judge(context):
+        result = context.get("result") or {}
+        artifact = result.get("artifact")
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root)
+            copied = []
+            if artifact and Path(artifact).is_file() and not Path(artifact).is_symlink():
+                target = directory / Path(artifact).name
+                shutil.copyfile(artifact, target)
+                copied.append(target.name)
+            task = (
+                "You are an independent judge. Decide whether the artifact satisfies the acceptance "
+                "criteria. Read the criteria and the artifact file; do NOT trust any executor summary. "
+                "Return JSON with keys verdict (pass|reject|need_user), defects (list of specific, "
+                "actionable Chinese defects; empty on pass), reason (only for need_user, one of "
+                "budget_exhausted/irreversible_action/business_tradeoff/repeated_failure/user_decision), "
+                "question (only for need_user). Acceptance: " + "；".join(acceptance) +
+                ". Subjective criteria: " + "；".join(criteria) +
+                ". Files in this directory: " + ", ".join(copied or ["(none)"]) + "."
+            )
+            brief = {
+                "nonce": uuid.uuid4().hex,
+                "required_keys": ["verdict", "defects", "reason", "question"],
+                "task": task,
+            }
+            (directory / "judge-brief.json").write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
+            opencode_adapter.run(directory, model, prefix="judge", timeout=timeout)
+            data = json.loads((directory / "judge-design.json").read_text(encoding="utf-8"))
+        verdict = data.get("verdict")
+        if verdict not in ("pass", "reject", "need_user"):
+            return {"verdict": "reject", "defects": ["judge returned an invalid verdict"]}
+        return {
+            "verdict": verdict,
+            "defects": [str(item) for item in (data.get("defects") or [])],
+            "reason": data.get("reason") or "",
+            "question": data.get("question") or "",
+        }
+
+    return judge
+
+
+def hybrid_judge(goal, *, model=FREE_MODEL):
+    checks = command_judge(goal)
+    has_checks = bool(goal.get("checks") or [])
+    has_subjective = bool(goal.get("subjective") or [])
+    agent = agent_judge(goal, model=model) if has_subjective else None
+
+    def judge(context):
+        if has_checks:
+            verdict = checks(context)
+            if verdict.get("verdict") == "reject":
+                return verdict
+        if agent is not None:
+            return agent(context)
+        return {"verdict": "pass", "defects": []}
 
     return judge

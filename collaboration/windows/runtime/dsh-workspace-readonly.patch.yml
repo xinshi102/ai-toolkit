@@ -10,7 +10,7 @@
     policy: never
 - id: tools
   config:
-    mode: native
+    mode: null
 - id: permission
   config:
     defaultPreset: read-only

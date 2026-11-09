@@ -30,7 +30,7 @@ def cmd_plan(args):
 
 
 def cmd_run(args):
-    state = goal_runner.run_goal_file(args.goal, home=args.home)
+    state = goal_runner.run_goal_file(args.goal, home=args.home, notify=not getattr(args, 'no_notify', False))
     print(goal_runner.summary_line(state))
     print(f"report={state['reportPath']}")
     if state.get("decisionPath"):
@@ -55,6 +55,7 @@ def main():
     run = sub.add_parser("run")
     run.add_argument("goal", type=Path)
     run.add_argument("--home", type=Path, default=DEFAULT_HOME)
+    run.add_argument("--no-notify", action="store_true")
     status = sub.add_parser("status")
     status.add_argument("run_id")
     status.add_argument("--home", type=Path, default=DEFAULT_HOME)

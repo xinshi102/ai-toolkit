@@ -134,6 +134,12 @@ def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True):
     if kind == "dsh":
         from goal_executor_dsh import executor_for as dsh_executor
         executor = dsh_executor(goal)
+    elif kind == "codex":
+        from goal_executor_codex import executor_for as codex_executor
+        executor = codex_executor(goal)
+    elif kind == "hermes":
+        from goal_executor_hermes import executor_for as hermes_executor
+        executor = hermes_executor(goal)
     else:
         executor = opencode_executor(goal)
     state = goal_loop.run_goal(goal, executor=executor, judge=hybrid_judge(goal), home=home)

@@ -158,7 +158,8 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
             return state
         if verdict["verdict"] == "need_user":
             reason = _wake_reason(verdict)
-            state.update(status="blocked", wake={"reason": reason, "question": verdict.get("question") or ""})
+            state.update(status="blocked", wake={"reason": reason, "question": verdict.get("question") or "",
+                                                 "options": verdict.get("options") or []})
             record("wake", reason=reason, question=verdict.get("question") or "")
             save()
             return state

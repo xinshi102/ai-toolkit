@@ -58,28 +58,26 @@ def agent_judge(goal, *, model=FREE_MODEL, timeout=120):
     def judge(context):
         result = context.get("result") or {}
         artifact = result.get("artifact")
+        artifact_text = ""
+        if artifact and Path(artifact).is_file() and not Path(artifact).is_symlink():
+            artifact_text = Path(artifact).read_text(encoding="utf-8", errors="replace")[:20000]
+        task = (
+            "You are an independent judge for subjective criteria only. Mechanical checks "
+            "have already passed; do not re-check nonces, schemas or lengths. The artifact "
+            "content is in the artifact field of this brief; judge only that content. "
+            "Return JSON with keys verdict (pass|reject|need_user), defects (list of specific, "
+            "actionable Chinese defects; empty on pass), reason (only for need_user, one of "
+            "budget_exhausted/irreversible_action/business_tradeoff/repeated_failure/user_decision), "
+            "question (only for need_user). Subjective criteria: " + "；".join(criteria) + "."
+        )
+        brief = {
+            "nonce": uuid.uuid4().hex,
+            "required_keys": ["verdict", "defects", "reason", "question"],
+            "artifact": artifact_text,
+            "task": task,
+        }
         with tempfile.TemporaryDirectory() as root:
             directory = Path(root)
-            copied = []
-            if artifact and Path(artifact).is_file() and not Path(artifact).is_symlink():
-                target = directory / Path(artifact).name
-                shutil.copyfile(artifact, target)
-                copied.append(target.name)
-            task = (
-                "You are an independent judge. Decide whether the artifact satisfies the acceptance "
-                "criteria. Read the criteria and the artifact file; do NOT trust any executor summary. "
-                "Return JSON with keys verdict (pass|reject|need_user), defects (list of specific, "
-                "actionable Chinese defects; empty on pass), reason (only for need_user, one of "
-                "budget_exhausted/irreversible_action/business_tradeoff/repeated_failure/user_decision), "
-                "question (only for need_user). Acceptance: " + "；".join(acceptance) +
-                ". Subjective criteria: " + "；".join(criteria) +
-                ". Files in this directory: " + ", ".join(copied or ["(none)"]) + "."
-            )
-            brief = {
-                "nonce": uuid.uuid4().hex,
-                "required_keys": ["verdict", "defects", "reason", "question"],
-                "task": task,
-            }
             (directory / "judge-brief.json").write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
             opencode_adapter.run(directory, model, prefix="judge", timeout=timeout)
             data = json.loads((directory / "judge-design.json").read_text(encoding="utf-8"))
@@ -94,7 +92,6 @@ def agent_judge(goal, *, model=FREE_MODEL, timeout=120):
         }
 
     return judge
-
 
 def hybrid_judge(goal, *, model=FREE_MODEL):
     checks = command_judge(goal)

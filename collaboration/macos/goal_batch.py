@@ -48,14 +48,15 @@ def run_batch(plan_path, *, home, notify=True):
     states = []
     context = ""
     stopped = None
-    for index, milestone in enumerate(milestones, start=1):
+    with goal_runner.goal_lock(home):
+      for index, milestone in enumerate(milestones, start=1):
         goal = dict(milestone)
         goal.setdefault("goalId", f"m{index}")
         if context:
             goal["objective"] = goal["objective"] + "\n\nPrevious milestone artifacts:\n" + context
         goal_path = run_dir / f"milestone-{index}.json"
         goal_path.write_text(json.dumps(goal, ensure_ascii=False, indent=2), encoding="utf-8")
-        state = goal_runner.run_goal_file(goal_path, home=home, notify=False)
+        state = goal_runner.run_goal_file(goal_path, home=home, notify=False, lock=False)
         states.append(state)
         if state.get("status") != "done":
             stopped = state

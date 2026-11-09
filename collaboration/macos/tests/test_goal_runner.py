@@ -8,6 +8,16 @@ sys.path.insert(0, str(BASE))
 import goal_runner
 
 
+class LockTests(unittest.TestCase):
+    def test_second_lock_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as home:
+            with goal_runner.goal_lock(home):
+                with self.assertRaises(goal_runner.GoalBusy):
+                    with goal_runner.goal_lock(home):
+                        pass
+
+
 class DecisionTests(unittest.TestCase):
     def test_decision_package_uses_reason_options_and_paths(self):
         state = {

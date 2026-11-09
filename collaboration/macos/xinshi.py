@@ -31,7 +31,11 @@ def cmd_plan(args):
 
 
 def cmd_run(args):
-    state = goal_runner.run_goal_file(args.goal, home=args.home, notify=not getattr(args, 'no_notify', False))
+    try:
+        state = goal_runner.run_goal_file(args.goal, home=args.home, notify=not getattr(args, 'no_notify', False))
+    except goal_runner.GoalBusy:
+        print("busy: 另一个目标正在执行，稍后再试")
+        return 1
     print(goal_runner.summary_line(state))
     print(f"report={state['reportPath']}")
     if state.get("decisionPath"):
@@ -40,7 +44,11 @@ def cmd_run(args):
 
 
 def cmd_batch(args):
-    report = goal_batch.run_batch(args.plan, home=args.home)
+    try:
+        report = goal_batch.run_batch(args.plan, home=args.home)
+    except goal_runner.GoalBusy:
+        print("busy: 另一个目标正在执行，稍后再试")
+        return 1
     print(f"batch={report['batchId']} status={report['status']} milestones={report['cost']['milestones']} "
           f"time={report['cost']['wallSeconds']}s tokens={report['cost']['tokens']}")
     print(f"report={report['reportPath']}")

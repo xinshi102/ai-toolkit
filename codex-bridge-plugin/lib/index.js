@@ -626,6 +626,8 @@ export function apply(ctx, config = {}) {
           if (!objective || objective.length > 500) return json(res, 400, { ok: false, error: "INVALID_OBJECTIVE" });
           const home = config.collaborationHome || path.join(process.env.HOME || "/Users/xinshi", "Library/Application Support/xinshi-collaboration");
           const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";
+          const busy = await collaborationControl(config);
+          if ((busy.goals || []).some((goal) => goal.status === "running")) return json(res, 409, { ok: false, error: "GOAL_BUSY" });
           await mkdir(path.join(home, "goals"), { recursive: true });
           const logPath = path.join(home, "goals", "panel-" + Date.now() + ".log");
           const logFd = await open(logPath, "a");
@@ -641,6 +643,8 @@ export function apply(ctx, config = {}) {
           const runId = typeof payload.runId === "string" ? payload.runId : "";
           if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(runId)) return json(res, 400, { ok: false, error: "INVALID_RUN_ID" });
           const home = config.collaborationHome || path.join(process.env.HOME || "/Users/xinshi", "Library/Application Support/xinshi-collaboration");
+          const busy = await collaborationControl(config);
+          if ((busy.goals || []).some((goal) => goal.status === "running")) return json(res, 409, { ok: false, error: "GOAL_BUSY" });
           const goalPath = path.join(home, "goals", runId, "goal.json");
           try { await readFile(goalPath); } catch { return json(res, 404, { ok: false, error: "GOAL_NOT_FOUND" }); }
           const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";

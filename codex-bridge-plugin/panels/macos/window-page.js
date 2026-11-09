@@ -196,7 +196,7 @@ function renderGoals(data){
   const input=el('input');input.placeholder='一句话目标，例如：把今天的会议记录整理成待办';
   const start=el('button','开始','btn primary');
   const status=el('div','','console-meta');
-  start.onclick=async()=>{const value=input.value.trim();if(!value)return;start.disabled=true;status.textContent='已提交，正在起草目标…';try{await api(apiRoot+'/goals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({objective:value})});input.value='';status.textContent='已开始；目标出现后会自动刷新。'}catch(e){status.textContent='启动失败：'+e.message}finally{start.disabled=false}};
+  start.onclick=async()=>{const value=input.value.trim();if(!value)return;start.disabled=true;status.textContent='已提交，正在起草目标…';try{await api(apiRoot+'/goals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({objective:value})});input.value='';status.textContent='已开始；目标出现后会自动刷新。'}catch(e){status.textContent=(String(e.message).includes('GOAL_BUSY')?'已有目标在执行，等它完成再开始。':'启动失败：'+e.message)}finally{start.disabled=false}};
   form.append(input,start);controlPane.append(form);controlPane.append(status);
   if(!goals.length){controlPane.append(el('div','还没有目标。在上面写一句，或对主对话说“做 X”。','empty'));return}
   const labels={running:'执行中',done:'完成',blocked:'需要决定'};
@@ -204,12 +204,12 @@ function renderGoals(data){
     const card=el('article',undefined,'cli-run bubble');
     card.append(el('div',g.objective||g.goalId));
     const cost=g.cost||{};const tokens=cost.tokens?cost.tokens.total:0;
-    const source=g.source==='conversation'?' · 对话登记':'';
+    const source=g.source==='conversation'?' · 对话登记':(g.source==='panel'?' · 面板登记':'');
     card.append(el('div',(labels[g.status]||g.status)+' · '+(g.attempts||0)+' 次 · '+(cost.wallSeconds||0)+'s · '+(tokens||0)+' tok'+(g.wake?' · 原因 '+(g.wake.reason||g.wake):'')+source,'console-meta'));
     if(g.wake&&g.wake.question)card.append(el('p',g.wake.question,'detail-note'));
     if(g.status==='blocked'){
       const again=el('button','继续（新一轮）','btn');
-      again.onclick=async()=>{again.disabled=true;card.append(el('div','已提交继续…','console-meta'));try{await api(apiRoot+'/goals/continue',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({runId:g.runId})})}catch(e){again.disabled=false;card.append(el('div','继续失败：'+e.message,'console-meta'))}};
+      again.onclick=async()=>{again.disabled=true;card.append(el('div','已提交继续…','console-meta'));try{await api(apiRoot+'/goals/continue',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({runId:g.runId})})}catch(e){again.disabled=false;card.append(el('div',(String(e.message).includes('GOAL_BUSY')?'已有目标在执行，稍后再继续。':'继续失败：'+e.message),'console-meta'))}};
       card.append(again);
     }
     if(g.status==='running'){card.append(el('div','执行中 · 第 '+Math.max(1,(g.progress&&g.progress.attempt)||g.attempts||1)+' 轮','console-meta'))}

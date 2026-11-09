@@ -8,9 +8,11 @@ time and token cost.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import subprocess
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 import goal_loop
@@ -97,6 +99,29 @@ def notify_state(state):
         pass
 
 
+class GoalBusy(RuntimeError):
+    """Another goal is already executing in this collaboration home."""
+
+
+@contextmanager
+def goal_lock(home):
+    """Serialize goal execution across panel clicks, chat runs and batches."""
+    path = Path(home) / "goals" / ".lock"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = path.open("a+")
+    try:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise GoalBusy("another goal is already running") from error
+        yield
+    finally:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+        finally:
+            handle.close()
+
+
 def blocked_state(goal, home, reason, detail):
     run_id = goal["goalId"] + "-" + uuid.uuid4().hex[:8]
     run_dir = Path(home) / "goals" / run_id
@@ -116,9 +141,13 @@ def blocked_state(goal, home, reason, detail):
     return state
 
 
-def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True):
+def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True, lock=True):
+    if lock:
+        with goal_lock(home):
+            return run_goal_file(goal_path, home=home, executor_kind=executor_kind, notify=notify, lock=False)
     goal = json.loads(Path(goal_path).read_text(encoding="utf-8"))
     goal = goal_loop.validate_goal(goal)
+    goal.setdefault("source", "goal-runner")
     if not goal.get("checks") and not goal.get("subjective"):
         raise goal_loop.GoalError("goal requires executable checks or subjective criteria")
     quota = goal_quota.check(home)
@@ -143,6 +172,7 @@ def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True):
     else:
         executor = opencode_executor(goal)
     state = goal_loop.run_goal(goal, executor=executor, judge=hybrid_judge(goal), home=home)
+    state["source"] = goal["source"]
     run_dir = Path(home) / "goals" / state["runId"]
     state["reportPath"] = str(run_dir / "report.md")
     (run_dir / "report.md").write_text(report_markdown(state), encoding="utf-8")

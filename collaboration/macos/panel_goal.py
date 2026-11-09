@@ -34,6 +34,7 @@ def main():
                 if not args.objective or not args.objective.strip():
                     raise SystemExit("objective is required")
                 goal = goal_draft.draft(args.objective.strip())
+                goal["source"] = "panel"
                 if args.executor:
                     goal["executor"] = args.executor
                 goal_path = home / "goals" / (".draft-" + goal["goalId"] + ".json")
@@ -41,7 +42,11 @@ def main():
                 log.write("drafted " + goal["goalId"] + " checks=" + str(len(goal.get("checks") or [])) + "\n")
                 if not goal.get("checks") and not goal.get("subjective"):
                     raise SystemExit("draft produced no executable checks")
-            state = goal_runner.run_goal_file(goal_path, home=home)
+            try:
+                state = goal_runner.run_goal_file(goal_path, home=home)
+            except goal_runner.GoalBusy:
+                log.write("busy: another goal is already running\n")
+                return 0
             log.write(goal_runner.summary_line(state) + "\n")
             log.write("report=" + state.get("reportPath", "") + "\n")
         except SystemExit as error:

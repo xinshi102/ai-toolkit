@@ -20,6 +20,19 @@ class DecisionTests(unittest.TestCase):
         self.assertIn('A. 加预算', text)
         self.assertIn('回复 A 或 B', text)
 
+    def test_report_contains_time_and_token_cost(self):
+        state = {
+            'goalId': 'g', 'objective': 'x', 'status': 'done',
+            'attempts': [{'verdict': 'pass', 'artifact': '/tmp/a.json'}],
+            'wake': None,
+            'cost': {'wallSeconds': 12.5, 'executorSeconds': 11.0, 'judgeSeconds': 0.2,
+                     'attempts': 1, 'tokens': {'total': 321, 'cost': 0.0, 'steps': 2}},
+        }
+        text = goal_runner.report_markdown(state)
+        self.assertIn('12.5s', text)
+        self.assertIn('321 tok', text)
+        self.assertIn('/tmp/a.json', text)
+
     def test_decision_package_has_defaults_for_whitelisted_reasons(self):
         state = {'goalId': 'g', 'objective': 'x', 'attempts': [{}],
                  'wake': {'reason': 'irreversible_action', 'question': '删掉旧数据？'}}

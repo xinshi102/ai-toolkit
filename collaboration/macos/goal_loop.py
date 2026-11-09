@@ -2,12 +2,12 @@
 
 The secretary never certifies "done" and never wakes the user on its own.
 Only the judge may request a wake, and only with a whitelisted reason; the
-loop records every attempt, defect and decision in one goal file plus an
-append-only event log.
+loop records every attempt, defect, duration and token usage in one goal file
+plus an append-only event log.
 
-This is deliberately small: one goal, one executor callable, one judge
-callable, one budget. Real executors (OpenCode/DSH) plug in behind the same
-callable interface; the first version is tested offline.
+Cost accounting is part of the contract: wall time, executor time (model
+communication + understanding + work), judge time, attempts, and best-effort
+token usage are recorded so the user can judge cost-effectiveness.
 """
 from __future__ import annotations
 
@@ -69,13 +69,24 @@ def _wake_reason(verdict: dict) -> str:
     return reason
 
 
-def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict:
-    """Run one goal until done, blocked, or a whitelisted wake is needed.
+def _cost_summary(state: dict, wall_seconds: float) -> dict:
+    attempts = state.get("attempts") or []
+    tokens = {"total": 0, "cost": 0.0, "steps": 0}
+    for item in attempts:
+        usage = item.get("usage") or {}
+        for key in tokens:
+            tokens[key] += usage.get(key) or 0
+    return {
+        "wallSeconds": round(wall_seconds, 3),
+        "executorSeconds": round(sum(item.get("executorSeconds") or 0 for item in attempts), 3),
+        "judgeSeconds": round(sum(item.get("judgeSeconds") or 0 for item in attempts), 3),
+        "attempts": len(attempts),
+        "tokens": tokens if tokens["total"] else None,
+    }
 
-    executor(context) -> {"artifact": path-or-value, "evidence": [...]}
-    judge(context)    -> {"verdict": "pass" | "reject" | "need_user",
-                          "defects": [...], "reason": str, "question": str}
-    """
+
+def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict:
+    """Run one goal until done, blocked, or a whitelisted wake is needed."""
     goal = validate_goal(goal)
     run_id = goal["goalId"] + "-" + uuid.uuid4().hex[:8]
     run_dir = Path(home) / "goals" / run_id
@@ -89,6 +100,7 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
         "status": "running",
         "attempts": [],
         "wake": None,
+        "cost": None,
         "startedAt": now_iso(),
         "updatedAt": now_iso(),
     }
@@ -102,27 +114,34 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
         state["updatedAt"] = now_iso()
         (run_dir / "goal.json").write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    deadline = clock() + goal["budget"]["maxSeconds"]
+    def finish(**updates) -> dict:
+        state.update(updates)
+        state["cost"] = _cost_summary(state, clock() - started)
+        save()
+        return state
+
+    started = clock()
+    deadline = started + goal["budget"]["maxSeconds"]
     defects: list[str] = []
     record("goal", objective=goal["objective"], acceptance=goal["acceptance"], budget=goal["budget"])
     save()
 
     for attempt in range(1, goal["budget"]["attempts"] + 1):
         if clock() > deadline:
-            state.update(status="blocked", wake={"reason": "budget_exhausted", "detail": "time budget exhausted"})
             record("wake", reason="budget_exhausted", detail="time budget exhausted")
-            save()
-            return state
+            return finish(status="blocked", wake={"reason": "budget_exhausted", "detail": "time budget exhausted"})
 
         workspace = attempts_dir / str(attempt)
         workspace.mkdir(parents=True, exist_ok=True, mode=0o700)
         record("dispatch", attempt=attempt, defects=defects)
+        dispatch_started = clock()
         try:
             result = executor({"goal": goal, "attempt": attempt, "defects": list(defects), "workspace": str(workspace)})
             if not isinstance(result, dict):
                 raise GoalError("executor must return a mapping")
         except Exception as error:  # a broken executor is evidence, not a pass
             result = {"error": type(error).__name__}
+        result_at = clock()
 
         artifact = result.get("artifact")
         artifact_path = None
@@ -139,38 +158,35 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
             "artifactSha256": artifact_sha,
             "error": result.get("error"),
             "evidence": result.get("evidence") or [],
+            "usage": result.get("usage"),
+            "executorSeconds": round(result_at - dispatch_started, 3),
         }
         state["attempts"].append(attempt_record)
-        record("result", **attempt_record)
+        record("result", **{key: value for key, value in attempt_record.items() if key != "usage"})
 
         verdict = judge({"goal": goal, "attempt": attempt, "result": result, "workspace": str(workspace)})
+        judge_at = clock()
         if not isinstance(verdict, dict) or verdict.get("verdict") not in ("pass", "reject", "need_user"):
             raise GoalError("judge must return pass, reject or need_user")
+        state["attempts"][-1]["judgeSeconds"] = round(judge_at - result_at, 3)
         record("judge", verdict=verdict.get("verdict"), defects=verdict.get("defects") or [],
                reason=verdict.get("reason"), question=verdict.get("question"))
-        verdict_record = {"attempt": attempt, **{key: verdict[key] for key in ("verdict", "defects", "reason", "question") if key in verdict}}
-        state["attempts"][-1]["verdict"] = verdict_record.get("verdict")
+        state["attempts"][-1]["verdict"] = verdict["verdict"]
 
         if verdict["verdict"] == "pass":
-            state.update(status="done", wake=None)
             record("done", attempt=attempt)
-            save()
-            return state
+            return finish(status="done", wake=None)
         if verdict["verdict"] == "need_user":
             reason = _wake_reason(verdict)
-            state.update(status="blocked", wake={"reason": reason, "question": verdict.get("question") or "",
-                                                 "options": verdict.get("options") or []})
             record("wake", reason=reason, question=verdict.get("question") or "")
-            save()
-            return state
+            return finish(status="blocked", wake={"reason": reason, "question": verdict.get("question") or "",
+                                                  "options": verdict.get("options") or []})
         defects = [str(item) for item in (verdict.get("defects") or [])]
         if not defects:
             defects = ["judge rejected without specific defects"]
 
-    state.update(status="blocked", wake={"reason": "budget_exhausted", "detail": "attempt budget exhausted"})
     record("wake", reason="budget_exhausted", detail="attempt budget exhausted")
-    save()
-    return state
+    return finish(status="blocked", wake={"reason": "budget_exhausted", "detail": "attempt budget exhausted"})
 
 
 def demo(home: Path) -> dict:
@@ -180,7 +196,7 @@ def demo(home: Path) -> dict:
         artifact = workspace / "artifact.json"
         ok = context["attempt"] >= 2
         artifact.write_text(json.dumps({"ok": ok, "attempt": context["attempt"]}), encoding="utf-8")
-        return {"artifact": str(artifact), "evidence": ["scripted executor"]}
+        return {"artifact": str(artifact), "evidence": ["scripted executor"], "usage": {"total": 0, "steps": 0, "cost": 0.0}}
 
     def judge(context):
         artifact = Path(context["result"]["artifact"])
@@ -205,4 +221,4 @@ if __name__ == "__main__":
     parser.add_argument("--home", type=Path, default=Path.home() / ".local/share/xinshi-goals")
     args = parser.parse_args()
     state = demo(args.home)
-    print(json.dumps({key: state[key] for key in ("runId", "status", "wake", "attempts")}, ensure_ascii=False, indent=2))
+    print(json.dumps({key: state[key] for key in ("runId", "status", "wake", "cost")}, ensure_ascii=False, indent=2))

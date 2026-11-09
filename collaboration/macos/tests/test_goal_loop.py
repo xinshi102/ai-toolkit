@@ -92,6 +92,32 @@ class RejectTests(unittest.TestCase):
             self.assertLess(len(state['attempts']), 5)
 
 
+class CostTests(unittest.TestCase):
+    def test_cost_records_executor_judge_time_and_tokens(self):
+        class Clock:
+            def __init__(self):
+                self.value = 0
+
+            def __call__(self):
+                self.value += 1
+                return self.value
+
+        with tempfile.TemporaryDirectory() as home:
+            def executor(context):
+                return {'artifact': write_artifact(context['workspace'], True),
+                        'usage': {'total': 100, 'cost': 0.0, 'steps': 2}}
+
+            state = loop.run_goal(goal(), executor=executor, judge=lambda c: {'verdict': 'pass'},
+                                  home=home, clock=Clock())
+            cost = state['cost']
+            self.assertEqual(cost['attempts'], 1)
+            self.assertEqual(cost['tokens']['total'], 100)
+            self.assertEqual(cost['tokens']['steps'], 2)
+            self.assertGreater(cost['executorSeconds'], 0)
+            self.assertGreaterEqual(cost['judgeSeconds'], 0)
+            self.assertGreater(cost['wallSeconds'], 0)
+
+
 class WakePolicyTests(unittest.TestCase):
     def test_whitelisted_judge_wake_is_recorded_with_question(self):
         with tempfile.TemporaryDirectory() as home:

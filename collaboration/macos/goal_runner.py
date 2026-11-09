@@ -1,9 +1,9 @@
 """One-file goal runner: `python3 goal_runner.py run goal.json`.
 
 The goal file carries the objective, acceptance text, executable checks and
-budget. The runner selects the executor (OpenCode by default), runs the
-goal loop, writes a decision package when the loop is blocked, and prints a
-three-line progress summary.
+budget. The runner selects the executor (OpenCode by default), runs the goal
+loop, writes report.md / decision.md, and prints a three-line summary with
+time and token cost.
 """
 from __future__ import annotations
 
@@ -34,12 +34,44 @@ def decision_markdown(state):
         f"原因：{reason}",
         f"目标：{state['objective']}",
         f"已尝试：{len(state['attempts'])} 次",
+        f"成本：{_cost_line(state)}",
         "证据：goal.json / events.jsonl（同目录）",
         "",
     ]
     lines += [str(option) for option in options]
     lines += ["", "建议：按当前预算与风险选择；回复 A 或 B 即可。"]
     return "\n".join(lines) + "\n"
+
+
+def _cost_line(state):
+    cost = state.get("cost") or {}
+    tokens = cost.get("tokens") or {}
+    token_text = f"{tokens.get('total')} tok" if tokens else "token 未记录"
+    return f"总 {cost.get('wallSeconds', 0)}s（执行 {cost.get('executorSeconds', 0)}s / 判断 {cost.get('judgeSeconds', 0)}s），{token_text}"
+
+
+def report_markdown(state):
+    cost = state.get("cost") or {}
+    attempts = state.get("attempts") or []
+    last_verdict = attempts[-1].get("verdict") if attempts else None
+    artifact = next((item.get("artifact") for item in reversed(attempts) if item.get("artifact")), None)
+    return "\n".join([
+        f"# 结果：{state['status']}（{state['goalId']}）",
+        f"- 目标：{state['objective']}",
+        f"- 尝试：{cost.get('attempts', len(attempts))} 次；最后结论：{last_verdict}",
+        f"- 成本：{_cost_line(state)}",
+        f"- 产物：{artifact or '无'}",
+        "- 证据：goal.json、events.jsonl（同目录）",
+        "",
+    ])
+
+
+def summary_line(state):
+    cost = state.get("cost") or {}
+    tokens = (cost.get("tokens") or {}).get("total")
+    token_text = f"{tokens}tok" if tokens else "tok=n/a"
+    return (f"goal={state['goalId']} status={state['status']} attempts={cost.get('attempts', 0)} "
+            f"time={cost.get('wallSeconds', 0)}s {token_text} wake={(state['wake'] or {}).get('reason')}")
 
 
 def run_goal_file(goal_path, *, home, executor_kind="opencode"):
@@ -50,13 +82,15 @@ def run_goal_file(goal_path, *, home, executor_kind="opencode"):
     executor = executor_for(goal)
     state = goal_loop.run_goal(goal, executor=executor, judge=command_judge(goal), home=home)
     run_dir = Path(home) / "goals" / state["runId"]
+    state["reportPath"] = str(run_dir / "report.md")
+    (run_dir / "report.md").write_text(report_markdown(state), encoding="utf-8")
     if state.get("wake"):
         state["decisionPath"] = str(run_dir / "decision.md")
         (run_dir / "decision.md").write_text(decision_markdown(state), encoding="utf-8")
     return state
 
 
-def show(run_id, home):
+def load_state(run_id, home):
     return json.loads((Path(home) / "goals" / run_id / "goal.json").read_text(encoding="utf-8"))
 
 
@@ -67,21 +101,20 @@ def main():
     run = sub.add_parser("run")
     run.add_argument("goal", type=Path)
     run.add_argument("--home", type=Path, default=default_home)
-    run.add_argument("--executor", default="opencode")
     show_parser = sub.add_parser("show")
     show_parser.add_argument("run_id")
     show_parser.add_argument("--home", type=Path, default=default_home)
     args = parser.parse_args()
     if args.action == "run":
-        state = run_goal_file(args.goal, home=args.home, executor_kind=args.executor)
-        print(f"goal={state['goalId']} status={state['status']} attempts={len(state['attempts'])} wake={(state['wake'] or {}).get('reason')}")
-        print(f"run={args.home / 'goals' / state['runId']}")
+        state = run_goal_file(args.goal, home=args.home)
+        print(summary_line(state))
+        print(f"report={state['reportPath']}")
         if state.get("decisionPath"):
             print(f"decision={state['decisionPath']}")
     else:
-        state = show(args.run_id, args.home)
-        print(json.dumps({key: state[key] for key in ("runId", "goalId", "status", "attempts", "wake")},
-                         ensure_ascii=False, indent=2))
+        state = load_state(args.run_id, args.home)
+        print(summary_line(state))
+        print(f"report={Path(args.home) / 'goals' / args.run_id / 'report.md'}")
 
 
 if __name__ == "__main__":

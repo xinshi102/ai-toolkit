@@ -146,6 +146,8 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
         workspace = attempts_dir / str(attempt)
         workspace.mkdir(parents=True, exist_ok=True, mode=0o700)
         record("dispatch", attempt=attempt, defects=defects)
+        state["progress"] = {"attempt": attempt, "phase": "dispatch"}
+        save()
         dispatch_started = clock()
         try:
             result = executor({"goal": goal, "attempt": attempt, "defects": list(defects), "workspace": str(workspace)})
@@ -174,7 +176,9 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
             "executorSeconds": round(result_at - dispatch_started, 3),
         }
         state["attempts"].append(attempt_record)
+        state["progress"] = {"attempt": attempt, "phase": "judge"}
         record("result", **{key: value for key, value in attempt_record.items() if key != "usage"})
+        save()
 
         verdict = judge({"goal": goal, "attempt": attempt, "result": result, "workspace": str(workspace)})
         judge_at = clock()
@@ -184,6 +188,7 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
         record("judge", verdict=verdict.get("verdict"), defects=verdict.get("defects") or [],
                reason=verdict.get("reason"), question=verdict.get("question"))
         state["attempts"][-1]["verdict"] = verdict["verdict"]
+        save()
 
         if verdict["verdict"] == "pass":
             record("done", attempt=attempt)

@@ -74,7 +74,8 @@ export async function collaborationControl(config = {}) {
       if (goal.runId !== id) continue;
       goals.push({ runId: goal.runId, goalId: goal.goalId, objective: goal.objective, status: goal.status,
                    attempts: (goal.attempts || []).length, cost: goal.cost || null,
-                   wake: goal.wake || null, updatedAt: goal.updatedAt || goal.startedAt || "" });
+                   wake: goal.wake || null, progress: goal.progress || null, source: goal.source || "goal-runner",
+                   updatedAt: goal.updatedAt || goal.startedAt || "" });
     }
     goals.sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
   } catch (error) { if (error.code !== "ENOENT") errors.push({ source: "goals", error: error.message }); }

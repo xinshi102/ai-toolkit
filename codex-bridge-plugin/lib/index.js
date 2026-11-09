@@ -1,5 +1,5 @@
 import {winConsoleRoute} from "../panels/windows/win-console-routes.js";
-import { appendFile, mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
@@ -617,6 +617,39 @@ export function apply(ctx, config = {}) {
         }
         if (req.method === "GET" && pathname === "/codex-collab/control") {
           return json(res, 200, await collaborationControl(config));
+        }
+        if (req.method === "POST" && pathname === "/codex-collab/goals") {
+          if (!isAllowedOrigin(req, ctx.webServer.port)) return json(res, 403, { ok: false, error: "ORIGIN_NOT_ALLOWED" });
+          let payload = {};
+          try { payload = await bodyJson(req); } catch { return json(res, 400, { ok: false, error: "INVALID_GOAL" }); }
+          const objective = typeof payload.objective === "string" ? payload.objective.trim() : "";
+          if (!objective || objective.length > 500) return json(res, 400, { ok: false, error: "INVALID_OBJECTIVE" });
+          const home = config.collaborationHome || path.join(process.env.HOME || "/Users/xinshi", "Library/Application Support/xinshi-collaboration");
+          const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";
+          await mkdir(path.join(home, "goals"), { recursive: true });
+          const logPath = path.join(home, "goals", "panel-" + Date.now() + ".log");
+          const logFd = await open(logPath, "a");
+          const child = spawn("python3", [runner, "--objective", objective, "--home", home], { detached: true, stdio: ["ignore", logFd.fd, logFd.fd] });
+          child.unref();
+          await logFd.close();
+          return json(res, 200, { ok: true, accepted: true, log: logPath });
+        }
+        if (req.method === "POST" && pathname === "/codex-collab/goals/continue") {
+          if (!isAllowedOrigin(req, ctx.webServer.port)) return json(res, 403, { ok: false, error: "ORIGIN_NOT_ALLOWED" });
+          let payload = {};
+          try { payload = await bodyJson(req); } catch { return json(res, 400, { ok: false, error: "INVALID_GOAL" }); }
+          const runId = typeof payload.runId === "string" ? payload.runId : "";
+          if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(runId)) return json(res, 400, { ok: false, error: "INVALID_RUN_ID" });
+          const home = config.collaborationHome || path.join(process.env.HOME || "/Users/xinshi", "Library/Application Support/xinshi-collaboration");
+          const goalPath = path.join(home, "goals", runId, "goal.json");
+          try { await readFile(goalPath); } catch { return json(res, 404, { ok: false, error: "GOAL_NOT_FOUND" }); }
+          const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";
+          const logPath = path.join(home, "goals", "panel-" + Date.now() + ".log");
+          const logFd = await open(logPath, "a");
+          const child = spawn("python3", [runner, "--resume", goalPath, "--home", home], { detached: true, stdio: ["ignore", logFd.fd, logFd.fd] });
+          child.unref();
+          await logFd.close();
+          return json(res, 200, { ok: true, accepted: true, log: logPath });
         }
         if ((req.method === "GET" && pathname === "/codex-collab/inbox") ||
             (req.method === "POST" && pathname === "/codex-collab/inbox/answer")) {

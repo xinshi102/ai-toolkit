@@ -49,6 +49,7 @@ body{background:radial-gradient(1100px 520px at 18% -12%,#102225 0%,#0a0f11 58%)
 .decision-options .btn:hover{background:#173033;border-color:var(--blue)}
 .cli-run.bubble{background:#0f1719;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .console-plan-title{font-weight:600}
+.goal-form{display:flex;gap:8px;margin:0 0 10px}.goal-form input{flex:1;background:#0f1719;border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);font-size:13px}.goal-form .btn{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -191,14 +192,27 @@ function renderOverview(data){
 function renderGoals(data){
   const goals=data.goals||[];
   controlPane.append(el('h2','目标'));
-  if(!goals.length){controlPane.append(el('div','还没有目标。对主对话说“做 X”后，这里显示进度与成本。','empty'));return}
+  const form=el('div',undefined,'goal-form');
+  const input=el('input');input.placeholder='一句话目标，例如：把今天的会议记录整理成待办';
+  const start=el('button','开始','btn primary');
+  const status=el('div','','console-meta');
+  start.onclick=async()=>{const value=input.value.trim();if(!value)return;start.disabled=true;status.textContent='已提交，正在起草目标…';try{await api(apiRoot+'/goals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({objective:value})});input.value='';status.textContent='已开始；目标出现后会自动刷新。'}catch(e){status.textContent='启动失败：'+e.message}finally{start.disabled=false}};
+  form.append(input,start);controlPane.append(form);controlPane.append(status);
+  if(!goals.length){controlPane.append(el('div','还没有目标。在上面写一句，或对主对话说“做 X”。','empty'));return}
   const labels={running:'执行中',done:'完成',blocked:'需要决定'};
   for(const g of goals){
     const card=el('article',undefined,'cli-run bubble');
     card.append(el('div',g.objective||g.goalId));
     const cost=g.cost||{};const tokens=cost.tokens?cost.tokens.total:0;
-    card.append(el('div',(labels[g.status]||g.status)+' · '+(g.attempts||0)+' 次 · '+(cost.wallSeconds||0)+'s · '+(tokens||0)+' tok'+(g.wake?' · 原因 '+(g.wake.reason||g.wake):''),'console-meta'));
+    const source=g.source==='conversation'?' · 对话登记':'';
+    card.append(el('div',(labels[g.status]||g.status)+' · '+(g.attempts||0)+' 次 · '+(cost.wallSeconds||0)+'s · '+(tokens||0)+' tok'+(g.wake?' · 原因 '+(g.wake.reason||g.wake):'')+source,'console-meta'));
     if(g.wake&&g.wake.question)card.append(el('p',g.wake.question,'detail-note'));
+    if(g.status==='blocked'){
+      const again=el('button','继续（新一轮）','btn');
+      again.onclick=async()=>{again.disabled=true;card.append(el('div','已提交继续…','console-meta'));try{await api(apiRoot+'/goals/continue',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({runId:g.runId})})}catch(e){again.disabled=false;card.append(el('div','继续失败：'+e.message,'console-meta'))}};
+      card.append(again);
+    }
+    if(g.status==='running'){card.append(el('div','执行中 · 第 '+Math.max(1,(g.progress&&g.progress.attempt)||g.attempts||1)+' 轮','console-meta'))}
     controlPane.append(card);
   }
 }

@@ -97,7 +97,7 @@ def load_state(run_id, home):
 def main():
     parser = argparse.ArgumentParser(description="xinshi goal runner")
     sub = parser.add_subparsers(dest="action", required=True)
-    default_home = Path.home() / ".local/share/xinshi-goals"
+    default_home = Path.home() / "Library/Application Support/xinshi-collaboration"
     run = sub.add_parser("run")
     run.add_argument("goal", type=Path)
     run.add_argument("--home", type=Path, default=default_home)

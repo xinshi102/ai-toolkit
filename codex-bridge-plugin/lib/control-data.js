@@ -64,5 +64,19 @@ export async function collaborationControl(config = {}) {
       runs.push({...run,events});
     }
   } catch (error) { if (error.code !== "ENOENT") errors.push({ source: "runs", error: error.message }); }
-  return { ok: errors.length === 0, available: true, activePlanId: registry.activePlanId, policy: registry.policy || {}, plan, runs, errors };
+  const goals = [];
+  try {
+    const base = await realpath(home), goalRoot = await realpath(path.join(home, "goals"));
+    if (!inside(base, goalRoot)) throw new Error("PATH_OUTSIDE_ROOT");
+    const names = (await readdir(goalRoot, { withFileTypes: true })).filter(row => validId(row.name) && row.isDirectory()).map(row => row.name);
+    for (const id of names.slice(0, 50)) {
+      const goal = await readJson(home, path.join("goals", id, "goal.json"), 256 * 1024);
+      if (goal.runId !== id) continue;
+      goals.push({ runId: goal.runId, goalId: goal.goalId, objective: goal.objective, status: goal.status,
+                   attempts: (goal.attempts || []).length, cost: goal.cost || null,
+                   wake: goal.wake?.reason || null, updatedAt: goal.updatedAt || goal.startedAt || "" });
+    }
+    goals.sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+  } catch (error) { if (error.code !== "ENOENT") errors.push({ source: "goals", error: error.message }); }
+  return { ok: errors.length === 0, available: true, activePlanId: registry.activePlanId, policy: registry.policy || {}, plan, runs, goals, errors };
 }

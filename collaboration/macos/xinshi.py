@@ -13,7 +13,7 @@ from pathlib import Path
 import goal_draft
 import goal_runner
 
-DEFAULT_HOME = Path.home() / ".local/share/xinshi-goals"
+DEFAULT_HOME = Path.home() / "Library/Application Support/xinshi-collaboration"
 
 
 def cmd_plan(args):

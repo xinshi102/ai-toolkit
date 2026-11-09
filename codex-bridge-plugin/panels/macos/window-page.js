@@ -77,7 +77,7 @@ const commandTarget=$('#commandTarget'),commandText=$('#commandText'),commandSen
 async function sendCommand(){const value=commandText.value.trim();if(!value)return;if(commandSend.disabled)return;const sessionId=session.value;if(!sessionId){commandStatus.textContent='先选会话';return}const to=commandTarget.value;const body={sessionId:sessionId,sender:'信使',recipient:to,kind:'command',goal:'信使指令',action:value,boundary:'来自协作窗口任务板的指令',returnExpected:'收到后回执'};body.direction=to==='Codex'?'deepseek-to-codex':'codex-to-deepseek';commandStatus.textContent='发送中…';commandSend.disabled=true;try{const r=await api(apiRoot+'/command',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});commandStatus.textContent='已投递 · 等待处理与验收';commandText.value='';refresh()}catch(e){commandStatus.textContent='失败：'+e.message}finally{commandSend.disabled=false}}
 commandSend.onclick=sendCommand;commandText.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!commandSend.disabled){e.preventDefault();sendCommand()}});
 const controlPane=el('section',undefined,'control-pane');controlPane.id='controlPane';const viewTabs=el('nav',undefined,'view-tabs');viewTabs.setAttribute('aria-label','协作视图');const conversation=$('.conversation');conversation.prepend(viewTabs);conversation.append(controlPane);let controlView='overview',controlFingerprint='',controlSnapshot=null;
-const viewButtons=new Map();for(const [id,label] of [['overview','总览'],['plan','总计划'],['cli','执行记录'],['messages','协作消息']]){const b=el('button',label,'btn');b.onclick=()=>openView(id);viewButtons.set(id,b);viewTabs.append(b)}
+const viewButtons=new Map();for(const [id,label] of [['overview','总览'],['goals','目标'],['plan','总计划'],['cli','执行记录'],['messages','协作消息']]){const b=el('button',label,'btn');b.onclick=()=>openView(id);viewButtons.set(id,b);viewTabs.append(b)}
 function openView(id){controlView=id;controlFingerprint='';controlPane.scrollTop=0;selectView();renderControl(controlSnapshot)}
 function selectView(){for(const [id,b] of viewButtons){b.setAttribute('aria-pressed',String(id===controlView));b.classList.toggle('primary',id===controlView)}for(const n of [...conversation.children])if(n!==viewTabs&&n!==controlPane)n.hidden=controlView!=='messages';controlPane.hidden=controlView==='messages'}
 function controlDetail(key,title,text){const d=el('details',undefined,'details');d.dataset.controlKey=key;d.append(el('summary',title),el('pre',text,'detail-body'));return d}
@@ -168,9 +168,23 @@ function renderOverview(data){
   for(const id of ordered)draw(id,roots);
   paintDetail();
 }
+function renderGoals(data){
+  const goals=data.goals||[];
+  controlPane.append(el('h2','目标'));
+  if(!goals.length){controlPane.append(el('div','还没有目标。对主对话说“做 X”后，这里显示进度与成本。','empty'));return}
+  const labels={running:'执行中',done:'完成',blocked:'需要决定'};
+  for(const g of goals){
+    const card=el('article',undefined,'cli-run bubble');
+    card.append(el('div',g.objective||g.goalId));
+    const cost=g.cost||{};const tokens=cost.tokens?cost.tokens.total:0;
+    card.append(el('div',(labels[g.status]||g.status)+' · '+(g.attempts||0)+' 次 · '+(cost.wallSeconds||0)+'s · '+(tokens||0)+' tok'+(g.wake?' · 原因 '+g.wake:''),'console-meta'));
+    controlPane.append(card);
+  }
+}
 function renderControl(data){if(!data||controlView==='messages')return;const fingerprint=JSON.stringify([controlView,data]);if(fingerprint===controlFingerprint)return;controlFingerprint=fingerprint;const opened=new Set([...controlPane.querySelectorAll('details[open]')].map(n=>n.dataset.controlKey));const top=controlPane.scrollTop;const consoleScroll=['.console-left','.console-right'].map(x=>controlPane.querySelector?.(x)?.scrollTop||0);controlPane.replaceChildren();
 if(!data.available){controlPane.append(el('div',data.error?'协作登记读取失败 · '+data.error:'尚未登记命令行协作任务。由 Codex 派发后，这里显示真实命令、响应和验收。','empty'));return}
 if(controlView==='overview'){renderOverview(data);for(const [i,sel] of ['.console-left','.console-right'].entries()){const n=controlPane.querySelector?.(sel);if(n)n.scrollTop=consoleScroll[i]}controlPane.scrollTop=top;return}
+if(controlView==='goals'){renderGoals(data);controlPane.scrollTop=top;return}
 const policy=el('div',undefined,'task-band');policy.append(el('div','Codex 主控 · 同一总计划 · 命令行执行','band-title'),el('div','简单 / 重复任务 → OpenCode 免费模型；常规协作 → DSH Flash；Codex 负责规划、监督和最终验收；Kimi 默认不启用。','card-copy'));policy.append(controlDetail('policy','查看当前费用与分工策略',JSON.stringify(data.policy,null,2)));controlPane.append(policy);
 if(data.errors?.length)controlPane.append(el('pre','部分记录读取失败：\\n'+JSON.stringify(data.errors,null,2),'detail-body'));
 const plan=data.plan,nodes=plan?.state?.nodes||{},order=plan?.state?.order||Object.keys(nodes);const ordered=[...new Set([...order,...Object.keys(nodes)])].filter(id=>nodes[id]);

@@ -1,3 +1,9 @@
+## 2026-11-09 — xinshi 3.1.4 · mac.5（本机修订）
+
+- 去重：「进程与资源」规则归并到 `references/coordination.md`；「独立复核顺序」收进正文 §4。
+- 计划展示细则：里程碑 = 计划节点，验收通过才标 done，note 只写一行结果与证据路径，Plan Map 与 todo 同步。
+- 运行时门禁：Mac 适配器在启动前复核模型、超时和工作目录，直接调用也会被拦（`collaboration/macos/launch_guard.py`）。
+
 ## 2026-11-09 — xinshi 3.1.4 · mac.4（本机修订）
 
 - 发布一致性修复：版本标记、更新分支、文件表、失效引用统一到 mac.4；新增 `scripts/check-xinshi.py` 发布门禁。

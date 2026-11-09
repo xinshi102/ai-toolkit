@@ -21,10 +21,12 @@
     }
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test test/*.test.js panels/*/test/*.test.js",
+    "test:bridge-integration": "node bridge-mcp/test/stdio-smoke.mjs"
   },
   "files": [
     "lib",
+    "panels",
     "cordis.patch.yml"
   ]
 }

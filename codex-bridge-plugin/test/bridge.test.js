@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { apply, buildDeliveryPrompt, createBridge } from "../lib/index.js";
-import { collaborationWindowHtml, selectCollaborationSession } from "../lib/window-page.js";
+import { collaborationWindowHtml, selectCollaborationSession } from "../panels/macos/window-page.js";
 
 test("automatically authorizes new sessions and saves their Harness binding", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "dsh-bridge-"));
@@ -102,7 +102,7 @@ test("defaults to an authorized session and preserves an explicit history select
   assert.match(html, /const apiRoot='\/codex-collab'/);
   assert.match(html, /apiRoot\+'\/network'/);
   assert.match(html, /window-data/);
-  assert.match(html, /session\.onchange=\(\)=>\{userSelectedSession=true;refresh\(\)\}/);
+  assert.match(html, /session\.onchange=\(\)=>\{userSelectedSession=true;taskFilter='';refresh\(\)\}/);
   assert.match(html, /多 Harness 协作对话/);
   assert.match(html, /sender\+' → '\+receiver/);
   assert.match(html, /s\.purpose==='test'\?'\[联调\] '/);
@@ -128,7 +128,7 @@ test("serves standalone collaboration data from a loopback-only route outside au
   const response = { status: 0, headers: {}, body: "", writeHead(status, headers = {}) { this.status = status; this.headers = headers; }, end(body = "") { this.body = body; } };
   await route.handler({ method: "GET", url: "/codex-collab/window", socket: { remoteAddress: "127.0.0.1" } }, response);
   assert.equal(response.status, 200);
-  assert.match(response.body, /多 Harness 协作对话/);
+  assert.match(response.body.toString(), /主控台 · ai-collab/);
   const dataResponse = { status: 0, headers: {}, body: "", writeHead(status, headers = {}) { this.status = status; this.headers = headers; }, end(body = "") { this.body = body; } };
   await route.handler({ method: "GET", url: "/codex-collab/window-data", socket: { remoteAddress: "127.0.0.1" } }, dataResponse);
   assert.equal(dataResponse.status, 200);

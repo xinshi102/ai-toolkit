@@ -1,6 +1,6 @@
 # 协作运行边界
 
-版本：3.0.0-trial.5。仅在并行写入、多个执行对话或跨 harness 协作时读。
+版本：3.1.4 / mac.4。仅在并行写入、多个执行对话或跨 harness 协作时读。
 
 ## 派发之前
 
@@ -22,10 +22,12 @@
 
 ## 跨 harness 交接
 
-共享进度固定放在完整路径 `E:/AI-Workspace/Projects/Shared/Agent-Conventions/.work/handoff/`：
+共享进度放在项目交接目录 `.work/handoff/`（由项目配置指定；跨项目统一布局按本机实际，例如 `~/AI-Workspace/...` 或 Windows 的 `E:/AI-Workspace/...`）：
 
 - 进度：`STATE.md`（交接前先读）
 - 结论：`inbox/<harness>-<时间>.md`，并在 STATE 的「交接日志」追加一条，不整份覆盖。
+
+跨项目固定布局只在确实存在且已确认时使用；没有就留在项目内，不虚构路径。
 
 文件存在只证明本地内容；对方确认回执才算接收。没有真实通道时说明缺口，不臆造桥接。
 

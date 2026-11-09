@@ -13,6 +13,7 @@ canonical="$(cd "$1" && pwd)"
 [[ -f "$canonical/SKILL.md" ]] || { echo "canonical SKILL.md not found: $canonical" >&2; exit 2; }
 shift
 
+failed=0
 for root in "$@"; do
   if [[ ! -d "$root" ]]; then
     echo "skip missing root: $root" >&2
@@ -24,6 +25,7 @@ for root in "$@"; do
       echo "ok (already a pointer): $target"
     else
       echo "refuse to overwrite non-pointer: $target" >&2
+      failed=1
     fi
     continue
   fi
@@ -34,7 +36,9 @@ name: xinshi
 description: 信使的任务入口：先判断环境与协作方式，单 harness 能做就自己做，需要时才用子 agent、跨 harness 或运行器；持续推进到必须由用户决定为止。
 ---
 
-Read the single canonical skill at \`$canonical/SKILL.md\` and follow it; reuse it if already loaded in this conversation.
+Read the single canonical skill at \`$canonical/SKILL.md\` and follow it. Resolve references relative to that canonical directory; reuse it if already loaded in this conversation.
 EOF
   echo "installed: $target -> $canonical"
 done
+
+exit "$failed"

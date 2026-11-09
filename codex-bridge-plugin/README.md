@@ -13,6 +13,12 @@
 
 Mac 与 Windows 面板分开维护、互不引用；共享行为只放 `lib/`。
 
+## 单一正本
+
+- 本目录是 codex-bridge 的唯一正本，已验证的 Mac / Win 面板都在这里。
+- DSH 安装产物由 `scripts/build-codex-bridge.sh` 生成到 `plugins/dsh/codex-bridge/`（已忽略，不手改）。
+- 本机开发目录 `~/Documents/deepseek/codex-bridge-plugin` 应指向本仓库（checkout 或符号链接），不再保存第二份可编辑副本。
+
 ## 用户看到什么
 
 打开 DeepSeek Harness，点击插件坞中的 `⇄ Codex 协作入口`：

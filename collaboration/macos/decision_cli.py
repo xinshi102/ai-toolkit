@@ -7,7 +7,7 @@ import uuid
 
 from cli_coordinator import HOME, finish_run, run_task, validate_task
 
-sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'plugins/dsh/codex-bridge/lib'))
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'codex-bridge-plugin/lib'))
 import decision_store as store
 
 

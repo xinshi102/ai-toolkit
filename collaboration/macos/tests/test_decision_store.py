@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 
-sys.path.insert(0,str(Path(__file__).resolve().parents[3]/'plugins/dsh/codex-bridge/lib'))
+sys.path.insert(0,str(Path(__file__).resolve().parents[3]/'codex-bridge-plugin/lib'))
 import decision_store as s
 
 

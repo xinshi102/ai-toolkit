@@ -27,7 +27,7 @@
 | 持久计划与导图 | [Plan Map](plan-map/README.md) | DSH用插件版，Codex用Skill/MCP版；其他宿主先确认MCP与UI支持 |
 | DSH搜索、上下文、通知、管理 | [DSH插件清单](CAPABILITIES.md)与 `plugins/dsh/<组件>/` | 对应DSH版本和插件接口，密钥本机单独配置 |
 | 多线程任务依赖、持久队列与结果验收 | [xinshi 协作运行器（Windows 版）](collaboration/windows/README.md) | Windows、Python 3.10+，原生执行器另装；非全平台安装包 |
-| 多AI桥接 | [codex-bridge](plugins/dsh/codex-bridge/README.md)、[opencode-bridge MCP](mcp/opencode-bridge/README.md) | 可运行的本机桥服务与明确授权的会话 |
+| 多AI桥接 | [codex-bridge](codex-bridge-plugin/README.md)、[opencode-bridge MCP](mcp/opencode-bridge/README.md) | 可运行的本机桥服务与明确授权的会话 |
 | 工作区与产物治理 | [ai-workspace-manager](skills/ai-workspace-manager/SKILL.md)、[管理工具](tools/workspace-manager/README.md) | 为目标设备建立自己的目录与状态 |
 
 为选中组件说明为什么需要、装到哪里、依赖是什么、怎样验证。同一需求有多个实现时，优先使用本机已有、兼容且改动最少的方案，不必全部安装。

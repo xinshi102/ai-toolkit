@@ -17,7 +17,7 @@
 | plan-map-dsh | plugin | [plan-map/dsh](plan-map/dsh) | personal | source snapshot |
 | plan-map-codex | plugin+mcp+skill | [plan-map/codex](plan-map/codex) | personal | source snapshot |
 | master-plan | plugin draft | [experimental/dsh-master-plan](experimental/dsh-master-plan) | personal | incomplete; not installable |
-| codex-bridge | plugin | [plugins/dsh/codex-bridge](plugins/dsh/codex-bridge) | personal | source snapshot |
+| codex-bridge | plugin | [codex-bridge-plugin](codex-bridge-plugin) | personal | 单一正本；DSH 安装产物由 `scripts/build-codex-bridge.sh` 生成 |
 | ui-enhancements | plugin collection | [plugins/dsh/ui-enhancements](plugins/dsh/ui-enhancements) | personal | legacy builder; explicit deployment only |
 | novel-writing | skill | [skills/novel-writing](skills/novel-writing) | personal | source snapshot |
 | obsidian-knowledge-base | skill | [skills/obsidian-knowledge-base](skills/obsidian-knowledge-base) | personal | source snapshot |

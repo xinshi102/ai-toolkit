@@ -118,6 +118,28 @@ class CostTests(unittest.TestCase):
             self.assertGreater(cost['wallSeconds'], 0)
 
 
+class TokenBudgetTests(unittest.TestCase):
+    def test_token_budget_stops_before_next_attempt(self):
+        class Clock:
+            def __init__(self):
+                self.value = 0
+
+            def __call__(self):
+                self.value += 1
+                return self.value
+
+        with tempfile.TemporaryDirectory() as home:
+            state = loop.run_goal(
+                goal(budget={'attempts': 5, 'maxSeconds': 100, 'tokens': 50}),
+                executor=lambda c: {'artifact': write_artifact(c['workspace'], False),
+                                    'usage': {'total': 60, 'cost': 0.0, 'steps': 1}},
+                judge=lambda c: {'verdict': 'reject', 'defects': ['no']},
+                home=home, clock=Clock())
+            self.assertEqual(state['status'], 'blocked')
+            self.assertEqual(state['wake']['reason'], 'budget_exhausted')
+            self.assertEqual(len(state['attempts']), 1)
+
+
 class WakePolicyTests(unittest.TestCase):
     def test_whitelisted_judge_wake_is_recorded_with_question(self):
         with tempfile.TemporaryDirectory() as home:

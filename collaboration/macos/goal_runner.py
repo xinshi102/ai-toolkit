@@ -10,10 +10,12 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import uuid
 from pathlib import Path
 
 import goal_loop
-from goal_executor_opencode import executor_for
+import goal_quota
+from goal_executor_opencode import executor_for as opencode_executor
 from goal_judge import hybrid_judge
 
 DECISION_DEFAULTS = {
@@ -95,12 +97,45 @@ def notify_state(state):
         pass
 
 
+def blocked_state(goal, home, reason, detail):
+    run_id = goal["goalId"] + "-" + uuid.uuid4().hex[:8]
+    run_dir = Path(home) / "goals" / run_id
+    run_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    state = {
+        "runId": run_id, "goalId": goal["goalId"], "objective": goal["objective"],
+        "acceptance": goal["acceptance"], "status": "blocked", "attempts": [],
+        "wake": {"reason": reason, "detail": detail},
+        "cost": {"wallSeconds": 0, "executorSeconds": 0, "judgeSeconds": 0, "attempts": 0, "tokens": None},
+        "startedAt": goal_loop.now_iso(), "updatedAt": goal_loop.now_iso(),
+    }
+    (run_dir / "goal.json").write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    state["reportPath"] = str(run_dir / "report.md")
+    (run_dir / "report.md").write_text(report_markdown(state), encoding="utf-8")
+    state["decisionPath"] = str(run_dir / "decision.md")
+    (run_dir / "decision.md").write_text(decision_markdown(state), encoding="utf-8")
+    return state
+
+
 def run_goal_file(goal_path, *, home, executor_kind="opencode", notify=True):
     goal = json.loads(Path(goal_path).read_text(encoding="utf-8"))
     goal = goal_loop.validate_goal(goal)
     if not goal.get("checks") and not goal.get("subjective"):
         raise goal_loop.GoalError("goal requires executable checks or subjective criteria")
-    executor = executor_for(goal)
+    quota = goal_quota.check(home)
+    if not quota["ok"]:
+        state = blocked_state(goal, home, "budget_exhausted",
+                              "account quota at/above limit: " + ", ".join(
+                                  str(row.get("agent") or row.get("key")) + " " + str(row.get("pct_used")) + "%"
+                                  for row in quota["hot"]))
+        if notify:
+            notify_state(state)
+        return state
+    kind = (goal.get("executor") or executor_kind or "opencode").lower()
+    if kind == "dsh":
+        from goal_executor_dsh import executor_for as dsh_executor
+        executor = dsh_executor(goal)
+    else:
+        executor = opencode_executor(goal)
     state = goal_loop.run_goal(goal, executor=executor, judge=hybrid_judge(goal), home=home)
     run_dir = Path(home) / "goals" / state["runId"]
     state["reportPath"] = str(run_dir / "report.md")

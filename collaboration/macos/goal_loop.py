@@ -51,11 +51,17 @@ def validate_goal(goal: dict) -> dict:
         raise GoalError("budget must be an object")
     attempts = budget.get("attempts", 3)
     seconds = budget.get("maxSeconds", 1800)
+    tokens = budget.get("tokens")
     if type(attempts) is not int or not 1 <= attempts <= MAX_ATTEMPTS:
         raise GoalError(f"budget.attempts must be an integer 1..{MAX_ATTEMPTS}")
     if type(seconds) is not int or not 1 <= seconds <= MAX_SECONDS:
         raise GoalError(f"budget.maxSeconds must be an integer 1..{MAX_SECONDS}")
-    return {**goal, "budget": {"attempts": attempts, "maxSeconds": seconds}}
+    if tokens is not None and (type(tokens) is not int or not 1 <= tokens <= 10_000_000):
+        raise GoalError("budget.tokens must be an integer 1..10000000")
+    normalized = {"attempts": attempts, "maxSeconds": seconds}
+    if tokens is not None:
+        normalized["tokens"] = tokens
+    return {**goal, "budget": normalized}
 
 
 def _sha256(path: Path) -> str:
@@ -130,6 +136,12 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
         if clock() > deadline:
             record("wake", reason="budget_exhausted", detail="time budget exhausted")
             return finish(status="blocked", wake={"reason": "budget_exhausted", "detail": "time budget exhausted"})
+        token_cap = goal["budget"].get("tokens")
+        if token_cap:
+            used = sum((item.get("usage") or {}).get("total") or 0 for item in state["attempts"])
+            if used >= token_cap:
+                record("wake", reason="budget_exhausted", detail="token budget exhausted")
+                return finish(status="blocked", wake={"reason": "budget_exhausted", "detail": "token budget exhausted"})
 
         workspace = attempts_dir / str(attempt)
         workspace.mkdir(parents=True, exist_ok=True, mode=0o700)

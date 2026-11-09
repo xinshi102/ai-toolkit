@@ -10,6 +10,7 @@ import argparse
 import json
 from pathlib import Path
 
+import goal_batch
 import goal_draft
 import goal_runner
 
@@ -38,6 +39,16 @@ def cmd_run(args):
     return 0 if state["status"] == "done" else 1
 
 
+def cmd_batch(args):
+    report = goal_batch.run_batch(args.plan, home=args.home)
+    print(f"batch={report['batchId']} status={report['status']} milestones={report['cost']['milestones']} "
+          f"time={report['cost']['wallSeconds']}s tokens={report['cost']['tokens']}")
+    print(f"report={report['reportPath']}")
+    if report.get('decision'):
+        print(f"decision={report['decision'].get('question') or report['decision'].get('reason')}")
+    return 0 if report["status"] == "done" else 1
+
+
 def cmd_status(args):
     state = goal_runner.load_state(args.run_id, args.home)
     print(goal_runner.summary_line(state))
@@ -56,11 +67,14 @@ def main():
     run.add_argument("goal", type=Path)
     run.add_argument("--home", type=Path, default=DEFAULT_HOME)
     run.add_argument("--no-notify", action="store_true")
+    batch = sub.add_parser("batch")
+    batch.add_argument("plan", type=Path)
+    batch.add_argument("--home", type=Path, default=DEFAULT_HOME)
     status = sub.add_parser("status")
     status.add_argument("run_id")
     status.add_argument("--home", type=Path, default=DEFAULT_HOME)
     args = parser.parse_args()
-    return {"plan": cmd_plan, "run": cmd_run, "status": cmd_status}[args.action](args)
+    return {"plan": cmd_plan, "run": cmd_run, "batch": cmd_batch, "status": cmd_status}[args.action](args)
 
 
 if __name__ == "__main__":

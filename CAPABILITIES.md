@@ -1,6 +1,6 @@
 # 个人 AI 能力总清单
 
-2026-10-19源码快照。ChatGPT桌面任务入口中的本机扩展主要通过Codex Skill/MCP部署；本仓库没有宣称ChatGPT网页原生支持这些本地插件。所有源码发布到GitHub，不等于目标设备已安装或通过真实模型/界面验收。
+2026-11-09源码快照。ChatGPT桌面任务入口中的本机扩展主要通过Codex Skill/MCP部署；本仓库没有宣称ChatGPT网页原生支持这些本地插件。所有源码发布到GitHub，不等于目标设备已安装或通过真实模型/界面验收。
 
 | 组件 | 类型 | 路径 | 来源 | 边界 |
 |---|---|---|---|---|
@@ -29,6 +29,7 @@
 | daily-office-work | skill | [skills/daily-office-work](skills/daily-office-work) | personal | source snapshot |
 | xinshi | skill | [skills/xinshi](skills/xinshi) | personal | source snapshot |
 | xinshi-collaboration-windows | runtime | [collaboration/windows](collaboration/windows) | personal | **Windows 版**；配置后验证原生执行器 |
+| xinshi-goal-loop | runtime | [collaboration/macos](collaboration/macos) | personal | v4 目标循环：Goal/Judge/成本/额度；Mac 本机 |
 | knowledge-vault | skill | [skills/knowledge-vault](skills/knowledge-vault) | personal | source snapshot |
 | ai-workspace-manager | skill | [skills/ai-workspace-manager](skills/ai-workspace-manager) | personal | source snapshot |
 | workspace-manager-tools | tools | [tools/workspace-manager](tools/workspace-manager) | personal | source; target setup required |

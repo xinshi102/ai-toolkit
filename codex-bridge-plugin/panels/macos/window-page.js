@@ -36,6 +36,19 @@ body,.topbar,.conversation,.sidebar,.shell,.control-pane,.view-tabs{background:#
 .decision-card{background:#000;border-left:1px solid #737373;border-bottom:0;padding:9px 12px;margin:0 0 8px}.decision-card p{margin:0 0 8px;line-height:1.5}.decision-options .btn{color:var(--ink);background:#0a0a0a}.decision-options .btn:hover{background:#1a1a1a;border-color:#575757}.overview-link{background:none;border:0;color:#c9c9c9;padding:5px 0;font-size:12px}.overview-link:hover{text-decoration:underline}.overview-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;line-height:1.5}.overview-row span:first-child{min-width:0;overflow-wrap:anywhere}.overview-row span:last-child{flex:none;color:var(--muted);font-size:11px}.overview-row.attention span:last-child,.overview-warn{color:var(--bad)}.overview-warn{font-size:12px;line-height:1.6}.cli-run .details{margin-top:6px}
 .console-board.tree-hidden{grid-template-columns:minmax(0,1fr)}.console-board.tree-hidden .console-left{display:none}.tree-reveal{display:none}.console-board.tree-hidden .tree-reveal{display:inline-block;margin-bottom:10px}
 @media(max-width:700px){.topbar{padding:0 14px}.sidebar{top:48px}.view-tabs{padding:4px 14px;gap:12px;flex-wrap:wrap}.control-pane{padding:16px}.control-pane:has(.console-board){overflow:auto}.console-board{grid-template-columns:1fr;height:auto}.console-left,.console-right{overflow:visible;padding:14px}.console-left{border-right:0;border-bottom:1px solid var(--line);max-height:44vh;overflow:auto}}
+/* v4 polish: teal accent, softer cards, consistent hierarchy */
+:root{--ink:#e9f1f2;--muted:#8fa4a9;--line:#223034;--panel:#0e1416;--base:#0a0f11;--blue:#35b8a6;--blue-soft:#12312e;--green:#5fd0b5;--bad:#f0928a}
+body{background:radial-gradient(1100px 520px at 18% -12%,#102225 0%,#0a0f11 58%)}
+.topbar{background:rgba(14,20,22,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.view-tabs{border-bottom-color:var(--line)}
+.view-tabs .btn.primary{color:var(--blue);border-bottom-color:var(--blue)}
+.console-section h2,.control-pane h2{font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.console-node:hover,.console-node[aria-pressed=true]{background:#132022;border-radius:7px}
+.decision-card{background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid var(--line);border-left:2px solid var(--blue);border-radius:10px;padding:12px 14px}
+.decision-options .btn{background:#132022;border:1px solid var(--line);border-radius:7px}
+.decision-options .btn:hover{background:#173033;border-color:var(--blue)}
+.cli-run.bubble{background:#0f1719;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.console-plan-title{font-weight:600}
 </style>
 </head>
 <body>

@@ -1,5 +1,14 @@
 # 2026-10-12 发布验证
 
+## 2026-11-09 xinshi 3.1.4 mac.6 + v4 目标循环
+
+- 协作运行器 63 项测试通过（goal loop / hybrid judge / OpenCode + DSH executor / quota / panel 契约）。
+- 面板 31 项测试通过；`/codex-collab/control` 返回 goals；「目标」标签与决定展示已部署 desktop profile 并验证。
+- 发布门禁 PASS；mac.6 推送 `d798f4e`；面板进 main `66443fd`；备份分支长期保留。
+- 真实模型：OpenCode 免费模型两轮 reject→pass（18.452s / 10852 tok），未唤醒用户。
+- 验收证据默认只存本机 `.work/`（acceptance/、journal/），报告与决定包带路径，不随分支发布。
+- 边界：agent judge 未做大样本误判对比；DSH 执行器只做契约测试，未跑真实端到端；面板 UI 需重载后人工确认。
+
 - 12组Node组件测试：270通过、0失败、4个宿主条件测试跳过；Plan Map真实MCP初始化、资源和本机HTTP保护测试通过。
 - Workspace隔离验证：10项迁移/回滚/索引检查，28项任务/产物/适配检查通过。
 - hatch-pet在临时Python环境安装Pillow后，28项单元测试通过；未使用付费图像调用。

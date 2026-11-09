@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "snapshot_date": "2026-10-19",
+  "snapshot_date": "2026-11-09",
   "components": [
     {
       "name": "dsh-search-mcp",
@@ -207,6 +207,13 @@
         "windows"
       ],
       "status": "Windows source release; target setup and native-client acceptance required"
+    },
+    {
+      "name": "xinshi-goal-loop",
+      "kind": "runtime",
+      "path": "collaboration/macos",
+      "origin": "personal",
+      "status": "v4 goal loop: Goal/Judge/cost; local Mac"
     }
   ],
   "excluded": "Credentials, runtime state, private conversations/vaults, official unmodified skills, installed vendor plugins, binaries and screenshots"

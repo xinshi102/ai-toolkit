@@ -1,11 +1,41 @@
 import {winConsoleRoute} from "../panels/windows/win-console-routes.js";
-import { appendFile, mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, open, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { collaborationWindowHtml } from "../panels/macos/window-page.js";
 import { collaborationControl } from "./control-data.js";
 import {decisionRequest,decisionRequestAllowed} from "./decision-http.js";
+
+async function spawnPanel(runner, extraArgs, home) {
+  await mkdir(path.join(home, "goals"), { recursive: true });
+  const logPath = path.join(home, "goals", "panel-" + Date.now() + ".log");
+  const logFd = await open(logPath, "a");
+  const child = spawn("python3", [runner, ...extraArgs, "--home", home], { detached: true, stdio: ["ignore", logFd.fd, logFd.fd] });
+  child.unref();
+  await logFd.close();
+  return logPath;
+}
+
+async function enqueueGoal(home, entry) {
+  await mkdir(path.join(home, "goals"), { recursive: true });
+  await appendFile(path.join(home, "goals", "queue.jsonl"), JSON.stringify(entry) + "\n");
+}
+
+function projectRoots(config) {
+  const raw = config.projectRoots || process.env.XINSHI_PROJECT_ROOTS || "";
+  const list = Array.isArray(raw) ? raw : String(raw).split(":");
+  const roots = list.map((item) => String(item).trim()).filter(Boolean);
+  return roots.length ? roots : [path.join(process.env.HOME || "/Users/xinshi", "Documents")];
+}
+
+function insideRoots(target, roots) {
+  const resolved = path.resolve(target);
+  return roots.some((root) => {
+    const base = path.resolve(root);
+    return resolved === base || resolved.startsWith(base + path.sep);
+  });
+}
 
 export const name = "@local/dsh-codex-bridge";
 export const inject = ["webServer", "sessionController"];
@@ -624,17 +654,42 @@ export function apply(ctx, config = {}) {
           try { payload = await bodyJson(req); } catch { return json(res, 400, { ok: false, error: "INVALID_GOAL" }); }
           const objective = typeof payload.objective === "string" ? payload.objective.trim() : "";
           if (!objective || objective.length > 500) return json(res, 400, { ok: false, error: "INVALID_OBJECTIVE" });
+          const publishDir = typeof payload.publishDir === "string" ? payload.publishDir.trim() : "";
+          if (publishDir) {
+            if (!insideRoots(publishDir, projectRoots(config))) return json(res, 403, { ok: false, error: "PROJECT_ROOT_NOT_ALLOWED" });
+            try { if (!(await stat(publishDir)).isDirectory()) throw new Error("not a directory"); }
+            catch { return json(res, 400, { ok: false, error: "PROJECT_DIR_NOT_FOUND" }); }
+          }
           const home = config.collaborationHome || path.join(process.env.HOME || "/Users/xinshi", "Library/Application Support/xinshi-collaboration");
           const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";
           const busy = await collaborationControl(config);
-          if ((busy.goals || []).some((goal) => goal.status === "running")) return json(res, 409, { ok: false, error: "GOAL_BUSY" });
-          await mkdir(path.join(home, "goals"), { recursive: true });
-          const logPath = path.join(home, "goals", "panel-" + Date.now() + ".log");
-          const logFd = await open(logPath, "a");
-          const child = spawn("python3", [runner, "--objective", objective, "--home", home], { detached: true, stdio: ["ignore", logFd.fd, logFd.fd] });
-          child.unref();
-          await logFd.close();
+          if ((busy.goals || []).some((goal) => goal.status === "running")) {
+            await enqueueGoal(home, { objective, publishDir: publishDir || null });
+            return json(res, 200, { ok: true, queued: true });
+          }
+          const extra = ["--objective", objective];
+          if (publishDir) extra.push("--publish-dir", publishDir);
+          const logPath = await spawnPanel(runner, extra, home);
           return json(res, 200, { ok: true, accepted: true, log: logPath });
+        }
+        if (req.method === "POST" && pathname === "/codex-collab/goals/answer") {
+          if (!isAllowedOrigin(req, ctx.webServer.port)) return json(res, 403, { ok: false, error: "ORIGIN_NOT_ALLOWED" });
+          let payload = {};
+          try { payload = await bodyJson(req); } catch { return json(res, 400, { ok: false, error: "INVALID_ANSWER" }); }
+          const runId = typeof payload.runId === "string" ? payload.runId : "";
+          if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(runId)) return json(res, 400, { ok: false, error: "INVALID_RUN_ID" });
+          const choice = payload.choice === "A" || payload.choice === "B" ? payload.choice : "";
+          if (!choice) return json(res, 400, { ok: false, error: "INVALID_CHOICE" });
+          const home = config.collaborationHome || path.join(process.env.HOME || "/Users/xinshi", "Library/Application Support/xinshi-collaboration");
+          const goalPath = path.join(home, "goals", runId, "goal.json");
+          let goal;
+          try { goal = JSON.parse(await readFile(goalPath, "utf8")); } catch { return json(res, 404, { ok: false, error: "GOAL_NOT_FOUND" }); }
+          if (goal.status !== "blocked") return json(res, 409, { ok: false, error: "GOAL_NOT_BLOCKED" });
+          await writeFile(path.join(home, "goals", runId, "decision-answer.json"),
+            JSON.stringify({ choice, at: new Date().toISOString() }), "utf8");
+          const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";
+          const logPath = await spawnPanel(runner, ["--resume", goalPath, "--answer", choice], home);
+          return json(res, 200, { ok: true, accepted: true, choice, log: logPath });
         }
         if (req.method === "POST" && pathname === "/codex-collab/goals/continue") {
           if (!isAllowedOrigin(req, ctx.webServer.port)) return json(res, 403, { ok: false, error: "ORIGIN_NOT_ALLOWED" });
@@ -648,11 +703,7 @@ export function apply(ctx, config = {}) {
           const goalPath = path.join(home, "goals", runId, "goal.json");
           try { await readFile(goalPath); } catch { return json(res, 404, { ok: false, error: "GOAL_NOT_FOUND" }); }
           const runner = config.panelRunner || "/Users/xinshi/Documents/ai-toolkit/collaboration/macos/panel_goal.py";
-          const logPath = path.join(home, "goals", "panel-" + Date.now() + ".log");
-          const logFd = await open(logPath, "a");
-          const child = spawn("python3", [runner, "--resume", goalPath, "--home", home], { detached: true, stdio: ["ignore", logFd.fd, logFd.fd] });
-          child.unref();
-          await logFd.close();
+          const logPath = await spawnPanel(runner, ["--resume", goalPath], home);
           return json(res, 200, { ok: true, accepted: true, log: logPath });
         }
         if ((req.method === "GET" && pathname === "/codex-collab/inbox") ||

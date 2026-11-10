@@ -75,6 +75,8 @@ export async function collaborationControl(config = {}) {
       goals.push({ runId: goal.runId, goalId: goal.goalId, objective: goal.objective, status: goal.status,
                    attempts: (goal.attempts || []).length, cost: goal.cost || null,
                    wake: goal.wake || null, progress: goal.progress || null, source: goal.source || "goal-runner",
+                   decisionAnswer: goal.decisionAnswer || null, batchId: goal.batchId || null,
+                   batchIndex: goal.batchIndex || null, batchSize: goal.batchSize || null,
                    updatedAt: goal.updatedAt || goal.startedAt || "" });
     }
     goals.sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));

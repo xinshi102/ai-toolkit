@@ -52,6 +52,9 @@ def run_batch(plan_path, *, home, notify=True):
       for index, milestone in enumerate(milestones, start=1):
         goal = dict(milestone)
         goal.setdefault("goalId", f"m{index}")
+        goal["batchId"] = batch_id
+        goal["batchSize"] = len(milestones)
+        goal["batchIndex"] = index
         if context:
             goal["objective"] = goal["objective"] + "\n\nPrevious milestone artifacts:\n" + context
         goal_path = run_dir / f"milestone-{index}.json"

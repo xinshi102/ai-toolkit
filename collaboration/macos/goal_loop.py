@@ -110,6 +110,9 @@ def run_goal(goal: dict, *, executor, judge, home, clock=time.monotonic) -> dict
         "startedAt": now_iso(),
         "updatedAt": now_iso(),
     }
+    for key in ("source", "batchId", "batchSize", "batchIndex"):
+        if key in goal:
+            state[key] = goal[key]
 
     def record(kind: str, **fields) -> None:
         event = {"at": now_iso(), "kind": kind, **fields}

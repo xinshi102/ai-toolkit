@@ -57,6 +57,10 @@ def publish(state, publish_dir):
 
 def run_once(home, *, objective=None, resume=None, answer=None, publish_dir=None, lock=True):
     home = Path(home)
+    if lock:
+        with goal_runner.goal_lock(home, blocking=True):
+            return run_once(home, objective=objective, resume=resume, answer=answer,
+                            publish_dir=publish_dir, lock=False)
     if resume is not None:
         goal_path = Path(resume)
         goal = json.loads(goal_path.read_text(encoding="utf-8"))
@@ -92,13 +96,8 @@ def run_once(home, *, objective=None, resume=None, answer=None, publish_dir=None
         log(home, "drafted " + goal["goalId"] + " checks=" + str(len(goal.get("checks") or [])))
         if not goal.get("checks") and not goal.get("subjective"):
             raise SystemExit("draft produced no executable checks")
-    try:
-        state = goal_runner.run_goal_file(goal_path, home=home, notify=True, lock=lock)
-    except goal_runner.GoalBusy:
-        log(home, "busy: keeping request for the queue")
-        with queue_path(home).open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps({"objective": objective, "publishDir": publish_dir}, ensure_ascii=False) + "\n")
-        return None
+    log(home, "publish_dir=" + str(publish_dir or ""))
+    state = goal_runner.run_goal_file(goal_path, home=home, notify=True, lock=False)
     log(home, goal_runner.summary_line(state))
     if state.get("reportPath"):
         log(home, "report=" + str(state["reportPath"]))
@@ -111,14 +110,14 @@ def run_once(home, *, objective=None, resume=None, answer=None, publish_dir=None
 def drain(home):
     home = Path(home)
     while True:
-        entry = pop_queue(home)
-        if not entry:
-            return
-        try:
-            with goal_runner.goal_lock(home):
+        with goal_runner.goal_lock(home, blocking=True):
+            entry = pop_queue(home)
+            if not entry:
+                return
+            try:
                 run_once(home, objective=entry.get("objective"), publish_dir=entry.get("publishDir"), lock=False)
-        except Exception:
-            log(home, "queue item failed:\n" + traceback.format_exc())
+            except Exception:
+                log(home, "queue item failed:\n" + traceback.format_exc())
 
 
 def main():

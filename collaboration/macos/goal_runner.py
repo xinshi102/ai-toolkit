@@ -104,16 +104,19 @@ class GoalBusy(RuntimeError):
 
 
 @contextmanager
-def goal_lock(home):
+def goal_lock(home, blocking=False):
     """Serialize goal execution across panel clicks, chat runs and batches."""
     path = Path(home) / "goals" / ".lock"
     path.parent.mkdir(parents=True, exist_ok=True)
     handle = path.open("a+")
     try:
-        try:
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as error:
-            raise GoalBusy("another goal is already running") from error
+        if blocking:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+        else:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as error:
+                raise GoalBusy("another goal is already running") from error
         yield
     finally:
         try:

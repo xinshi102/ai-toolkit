@@ -81,5 +81,14 @@ export async function collaborationControl(config = {}) {
     }
     goals.sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
   } catch (error) { if (error.code !== "ENOENT") errors.push({ source: "goals", error: error.message }); }
-  return { ok: errors.length === 0, available: true, activePlanId: registry.activePlanId, policy: registry.policy || {}, plan, runs, goals, errors };
+  const resources = [];
+  try {
+    const quota = await readJson(home, "console-quota.json", 64 * 1024);
+    const rows = Array.isArray(quota) ? quota : (quota.rows || []);
+    for (const row of rows.slice(0, 20)) {
+      resources.push({ key: row.key || "", agent: row.agent || row.key || "", pctUsed: typeof row.pct_used === "number" ? row.pct_used : null,
+                       period: row.period || "", observedAt: row.observedAt || "", note: row.note || "" });
+    }
+  } catch (error) { if (error.code !== "ENOENT") errors.push({ source: "resources", error: error.message }); }
+  return { ok: errors.length === 0, available: true, activePlanId: registry.activePlanId, policy: registry.policy || {}, plan, runs, goals, resources, errors };
 }

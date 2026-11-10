@@ -19,7 +19,7 @@ const getAsset=async(name,res)=>{
 };
 export async function winConsoleRoute(req,res,pathname,port,config,bodyJson){
   const get=req.method==='GET', post=req.method==='POST';
-  if(get&&['/codex-collab/win-console','/codex-collab/window'].includes(pathname)){await getAsset('console.html',res);return true}
+  if(get&&['/codex-collab/win-console'].includes(pathname)){await getAsset('console.html',res);return true}
   if(get&&pathname==='/codex-collab/win-ui/console.js'){await getAsset('console.js',res);return true}
   if(!pathname.startsWith(base+'/'))return false;
   if(!decisionRequestAllowed(req,port)){reply(res,403,{ok:false,error:'CONSOLE_ORIGIN_REQUIRED'});return true}

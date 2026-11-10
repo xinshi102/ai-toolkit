@@ -641,6 +641,10 @@ export function apply(ctx, config = {}) {
       const pathname = new URL(req.url, "http://127.0.0.1").pathname;
       try {
         if (await winConsoleRoute(req, res, pathname, ctx.webServer.port, config, bodyJson)) return;
+        if (req.method === "GET" && pathname === "/codex-collab/window") {
+          res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+          return res.end(collaborationWindowHtml());
+        }
         if (req.method === "GET" && pathname === "/codex-collab/legacy-window") {
           res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
           return res.end(collaborationWindowHtml());

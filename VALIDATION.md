@@ -5,6 +5,8 @@
 - 面板：目标决定可在面板选 A/B 并自动续跑（A 加预算重启新一轮，B 标记已停止）；忙碌时改排队；可填授权项目目录，完成后把产物复制过去；长任务显示里程碑进度。
 - 运行组件 71 项测试；面板 31 项测试；门禁 PASS。
 - 通知：`osascript display notification` 退出码 0；证据索引脚本 `scripts/evidence-index.py` 生成 `.work/xinshi/evidence-index.md`。
+- 面板实测：发布到项目目录成功（liveD）；忙碌排队 E/F 成功；A/B 作答成功；草稿 required_keys/artifact 与 checks 对齐（提交 b6b646a）。
+
 - 边界：聊天本身与 DSH/Codex/Hermes 的 token 未解析；Windows、Kimi、Claude 未验证；真断点续跑与 OS 级隔离未做；项目输出只复制最终产物，不做任意文件编辑。
 
 ## 2026-11-09 xinshi 3.1.4 mac.6 + v4 目标循环

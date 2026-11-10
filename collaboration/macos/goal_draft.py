@@ -16,6 +16,29 @@ import opencode_adapter
 
 FREE_MODEL = "opencode/deepseek-v4.1-flash-free"
 
+KEY_PATTERN = re.compile(r"\.get\(\s*['\"]([A-Za-z0-9_]+)['\"]\s*\)|\[\s*['\"]([A-Za-z0-9_]+)['\"]\s*\]")
+FILE_PATTERN = re.compile(r"open\(\s*['\"]([^'\"]+\.json)['\"]")
+
+
+def _keys_in_checks(checks):
+    keys = []
+    for check in checks:
+        for match in KEY_PATTERN.finditer(check.get("command", "")):
+            key = match.group(1) or match.group(2)
+            if key and key not in keys:
+                keys.append(key)
+    return keys
+
+
+def _files_in_checks(checks):
+    files = []
+    for check in checks:
+        for match in FILE_PATTERN.finditer(check.get("command", "")):
+            name = match.group(1)
+            if name != "goal-brief.json" and name not in files:
+                files.append(name)
+    return files
+
 TASK = """Convert the user's request into ONE goal JSON object with exactly these keys:
 goalId (kebab-case), objective (one sentence), acceptance (3-7 verifiable Chinese strings),
 checks (list of {"desc": Chinese label, "command": a shell command run inside the attempt
@@ -64,6 +87,14 @@ def normalize(data, request):
         attempts = 3
     if type(seconds) is not int or not 120 <= seconds <= 1800:
         seconds = 900
+    artifact = str(data.get("artifact") or "goal-design.json")
+    files = _files_in_checks(checks)
+    if files and artifact == "goal-design.json":
+        artifact = files[0]
+    required = [str(key) for key in (data.get("required_keys") or ["nonce", "result"])]
+    check_keys = _keys_in_checks(checks)
+    if check_keys:
+        required = ["nonce"] + [key for key in check_keys if key != "nonce"]
     return {
         "goalId": str(data.get("goalId") or _slug(request)),
         "objective": str(data.get("objective") or request.strip()),
@@ -71,8 +102,8 @@ def normalize(data, request):
         "checks": checks,
         "subjective": [str(item) for item in (data.get("subjective") or []) if str(item).strip()],
         "budget": {"attempts": attempts, "maxSeconds": seconds},
-        "artifact": str(data.get("artifact") or "goal-design.json"),
-        "required_keys": [str(key) for key in (data.get("required_keys") or ["nonce", "result"])],
+        "artifact": artifact,
+        "required_keys": required,
         "retry_note": str(data.get("retry_note") or ""),
     }
 

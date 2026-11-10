@@ -24,7 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "DeepSeek · Codex · OpenCode 协作窗口"
+        window.title = "信使协作"
         window.minSize = NSSize(width: 980, height: 560)
         window.center()
         window.contentView = webView
@@ -44,7 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
               server.version == 1,
               (1...65535).contains(server.port),
               ["127.0.0.1", "localhost", "::1"].contains(server.host),
-              let url = URL(string: "http://\(server.host):\(server.port)/codex-collab/window") else {
+              let url = URL(string: "http://\(server.host):\(server.port)/api/codex-bridge/window") else {
             showWaitingPage()
             return
         }
